@@ -2,11 +2,22 @@ import helpers from "./helpers.js";
 import effects, { tremolo } from "./effects.js";
 
 // create web audio api context
-window.audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+window.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+    latencyHint: 'interactive',
+    sampleRate: 44100,
+})
 window.audioSrc = null
 
 if (navigator.mediaDevices) {
-    navigator.mediaDevices.getUserMedia ({audio: true})
+    navigator.mediaDevices.getUserMedia ({
+        video: false,
+        audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            latency: 0
+        }
+    })
     .then((stream) => {
         window.audioSrc = audioCtx.createMediaStreamSource(stream);
         init()
@@ -25,10 +36,11 @@ function init () {
     osqr.frequency.setValueAtTime(440, audioCtx.currentTime) // value in hertz
     osqr.start();
     
-    window.trem = new tremolo(audioCtx, 2)
-    audioSrc.connect(trem)
-    trem.connect(audioCtx.destination)
-
+    // window.trem = new tremolo(audioCtx, 2)
+    // audioSrc.connect(trem)
+    // trem.connect(audioCtx.destination)
+    
+    audioSrc.connect(audioCtx.destination)
     // audioCtx.suspend()
 
     console.log("Initilized")
@@ -43,12 +55,12 @@ function init () {
 }
 
 window.suspend = () => {
-    audioCtx.suspend()
+    window.audioCtx.suspend()
     console.log("Suspended")
 }
 
 window.resume = () => {
-    audioCtx.resume()
+    window.audioCtx.resume()
     console.log("Resumed")
 }
 

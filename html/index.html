@@ -7,8 +7,8 @@
     <script src="./main.js" type="module"></script>
 </head>
 <body>
-    <button onclick="suspend">SUSPEND</button>
-    <button onclick="resume">RESUME</button>
-    <input type="range" id="range_tremolo" min="0" max="10" step=".5" oninput="change_tremolo(this.value)">
+    <button onclick="suspend()">SUSPEND</button>
+    <button onclick="resume()">RESUME</button>
+    <input type="range" id="range_tremolo" value="2.0" min="0" max="10" step=".5" oninput="change_tremolo(this.value)">
 </body>
 </html>
