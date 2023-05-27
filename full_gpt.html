@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Applying Distortion, Reverb, and Gain to Microphone Audio</title>
+  <!-- Import the Tone.js library from the CDN -->
+  <script src="https://unpkg.com/tone"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .slider-container label {
+      margin-bottom: 5px;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Applying Distortion, Reverb, and Gain to Microphone Audio</h1>
+  <p>This code was generated entirely by Chat-GPT under the guidance of Arlan Dantas. For more projects and information, visit <a href="https://arlandantas.github.io/">https://arlandantas.github.io/</a>.</p>
+  
+  <div class="card">
+    <div class="card-title">Distortion</div>
+    <div class="slider-container">
+      <label for="distortion-slider">Distortion Value:</label>
+      <input type="range" id="distortion-slider" min="0" max="1" step="0.01" value="0.8" onchange="updateDistortionValue(this.value)">
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-title">Reverb</div>
+    <div class="slider-container">
+      <label for="reverb-decay-slider">Reverb Decay:</label>
+      <input type="range" id="reverb-decay-slider" min="0.1" max="10" step="0.1" value="3" onchange="updateReverbDecayValue(this.value)">
+    </div>
+    <div class="slider-container">
+      <label for="reverb-wet-slider">Reverb Wet:</label>
+      <input type="range" id="reverb-wet-slider" min="0" max="1" step="0.01" value="0.6" onchange="updateReverbWetValue(this.value)">
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-title">Gain</div>
+    <div class="slider-container">
+      <label for="gain-slider">Gain Value:</label>
+      <input type="range" id="gain-slider" min="0" max="3" step="0.1" value="1" onchange="updateGainValue(this.value)">
+    </div>
+  </div>
+  
+  <button onclick="startAudio()">Start</button>
+  <button onclick="stopAudio()">Stop</button>
+
+  <script>
+    // Create a node to capture microphone audio
+    const mic = new Tone.UserMedia();
+
+    // Create a node for applying distortion
+    const distortion = new Tone.Distortion(0.8); // Default value
+    const distortionSlider = document.getElementById('distortion-slider');
+
+    // Create a node for applying reverb
+    const reverb = new Tone.Reverb({
+      decay: 3, // Default value
+      wet: 0.6 // Default value
+    });
+    const reverbDecaySlider = document.getElementById('reverb-decay-slider');
+    const reverbWetSlider = document.getElementById('reverb-wet-slider');
+
+    // Create a gain node
+    const gainNode = new Tone.Gain(1); // Default value
+    const gainSlider = document.getElementById('gain-slider');
+
+    // Connect the microphone node to the distortion
+    mic.connect(distortion);
+
+    // Connect the distortion to the reverb
+    distortion.connect(reverb);
+
+    // Connect the reverb to the gain node
+    reverb.connect(gainNode);
+
+    // Connect the gain node to the audio output
+    gainNode.toDestination();
+
+    let isAudioStarted = false;
+
+    function startAudio() {
+      if (!isAudioStarted) {
+        // Start the audio context in response to the button click
+        Tone.start();
+
+        // Enable the microphone
+        mic.open().then(() => {
+          console.log('Microphone is open and processing audio!');
+        }).catch((error) => {
+          console.log('Failed to open the microphone:', error);
+        });
+
+        isAudioStarted = true;
+      }
+    }
+
+    function stopAudio() {
+      if (isAudioStarted) {
+        // Disable the microphone
+        mic.close();
+        console.log('Microphone has been disabled.');
+
+        isAudioStarted = false;
+      }
+    }
+
+    function updateDistortionValue(value) {
+      distortion.distortion = value;
+    }
+
+    function updateReverbDecayValue(value) {
+      reverb.decay = value;
+    }
+
+    function updateReverbWetValue(value) {
+      reverb.wet.value = value;
+    }
+
+    function updateGainValue(value) {
+      gainNode.gain.value = value;
+    }
+  </script>
+</body>
+</html>
