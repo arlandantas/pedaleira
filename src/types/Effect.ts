@@ -1,6 +1,6 @@
 import { ToneAudioNode } from 'tone';
 
-export type EffectType = "distortion" | "gain" | "reverb";
+export type EffectType = "distortion" | "gain" | "reverb" | "tremolo" | "chorus";
 
 export class Effect<NodeType extends ToneAudioNode = ToneAudioNode> {
   _id: string;

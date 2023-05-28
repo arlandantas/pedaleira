@@ -1,10 +1,14 @@
 import GainType from "../types/Gain";
 import DistortionType from "../types/Distortion";
 import ReverbType from "../types/Reverb";
+import TremoloType from "../types/Tremolo";
+import ChorusType from "../types/Chorus";
 import Effect from "../types/Effect";
 import Distortion from "./Distortion";
 import Gain from "./Gain";
 import Reverb from "./Reverb";
+import Tremolo from "./Tremolo";
+import Chorus from "./Chorus";
 
 type EffectComponentParams = {
   effect: Effect;
@@ -34,6 +38,8 @@ function EffectComponent({ effect, onEffectUpdate }: EffectComponentParams) {
       { effect._type === "distortion" ? <Distortion effect={effect as DistortionType} /> : null }
       { effect._type === "gain" ? <Gain effect={effect as GainType} /> : null }
       { effect._type === "reverb" ? <Reverb effect={effect as ReverbType} /> : null }
+      { effect._type === "tremolo" ? <Tremolo effect={effect as TremoloType} /> : null }
+      { effect._type === "chorus" ? <Chorus effect={effect as ChorusType} /> : null }
     </div>
   )
 }

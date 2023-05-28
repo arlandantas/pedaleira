@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { FMSynth, Loop, MonoSynth, PolySynth, Sampler, ToneAudioNode, Transport, UserMedia, start as startTone } from 'tone'
+import { Loop, MonoSynth, Sampler, ToneAudioNode, Transport, UserMedia, start as startTone } from 'tone'
 import EffectList from './components/EffectList';
 import Effect, { EffectType } from './types/Effect';
 import Distortion from './types/Distortion';
 import Reverb from './types/Reverb';
 import Gain from './types/Gain';
+import Tremolo from './types/Tremolo';
+import Chorus from './types/Chorus';
 
 type SourceType = "mic" | "synth" | "eletric guitar" | "eletric bass";
 
@@ -17,6 +19,8 @@ function App() {
     new Distortion(),
     new Gain(),
     new Reverb(),
+    new Tremolo(),
+    new Chorus()
   ]);
 
   const micSource = useMemo(() => new UserMedia(), []);
@@ -27,6 +31,9 @@ function App() {
       synth.triggerAttackRelease("C3", "4n", time);
       synth.triggerAttackRelease("E3", "4n", time + 0.25);
       synth.triggerAttackRelease("G3", "4n", time + 0.5);
+
+      synth.triggerAttackRelease("E3", "4n", time + 0.75);
+      synth.triggerAttackRelease("G3", "8n", time + 0.825);
     }, "1n").start(0);
     
     return synth;
@@ -60,6 +67,9 @@ function App() {
       guitar.triggerAttackRelease("C3", "4n", time);
       guitar.triggerAttackRelease("E3", "4n", time + 0.25);
       guitar.triggerAttackRelease("G3", "4n", time + 0.5);
+
+      guitar.triggerAttackRelease("E3", "4n", time + 0.75);
+      guitar.triggerAttackRelease("G3", "8n", time + 0.825);
     }, "1n").start(0);
 
     return guitar;
@@ -92,6 +102,9 @@ function App() {
       bass.triggerAttackRelease("C3", "4n", time);
       bass.triggerAttackRelease("E3", "4n", time + 0.25);
       bass.triggerAttackRelease("G3", "4n", time + 0.5);
+
+      bass.triggerAttackRelease("E3", "4n", time + 0.75);
+      bass.triggerAttackRelease("G3", "8n", time + 0.825);
     }, "1n").start(0);
 
     return bass;
@@ -154,6 +167,10 @@ function App() {
       effect = new Reverb()
     } else if (effectType == "gain") {
       effect = new Gain()
+    } else if (effectType == "tremolo") {
+      effect = new Tremolo()
+    } else if (effectType == "chorus") {
+      effect = new Chorus()
     } else {
       return;
     }
@@ -176,7 +193,7 @@ function App() {
         <br />
         Effect:
         <select onChange={(evt) => setEffectType(evt.target.value as EffectType)}>
-          {["distortion", "gain", "reverb"].map(e => <option value={e} key={e}>{e}</option>)}
+          {["distortion", "gain", "reverb", "tremolo"].map(e => <option value={e} key={e}>{e}</option>)}
         </select>
         <button onClick={newEffect}>Add</button><br />
         <EffectList effects={effects} onEffectsUpdate={onEffectsUpdate} />
