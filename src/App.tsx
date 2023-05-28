@@ -31,9 +31,6 @@ function App() {
       synth.triggerAttackRelease("C3", "4n", time);
       synth.triggerAttackRelease("E3", "4n", time + 0.25);
       synth.triggerAttackRelease("G3", "4n", time + 0.5);
-
-      synth.triggerAttackRelease("E3", "4n", time + 0.75);
-      synth.triggerAttackRelease("G3", "8n", time + 0.825);
     }, "1n").start(0);
     
     return synth;
@@ -67,9 +64,6 @@ function App() {
       guitar.triggerAttackRelease("C3", "4n", time);
       guitar.triggerAttackRelease("E3", "4n", time + 0.25);
       guitar.triggerAttackRelease("G3", "4n", time + 0.5);
-
-      guitar.triggerAttackRelease("E3", "4n", time + 0.75);
-      guitar.triggerAttackRelease("G3", "8n", time + 0.825);
     }, "1n").start(0);
 
     return guitar;
@@ -101,9 +95,6 @@ function App() {
     new Loop(time => {
       bass.triggerAttackRelease("C3", "4n", time);
       bass.triggerAttackRelease("E3", "4n", time + 0.25);
-      bass.triggerAttackRelease("G3", "4n", time + 0.5);
-
-      bass.triggerAttackRelease("E3", "4n", time + 0.75);
       bass.triggerAttackRelease("G3", "8n", time + 0.825);
     }, "1n").start(0);
 
