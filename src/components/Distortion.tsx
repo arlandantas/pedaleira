@@ -22,7 +22,6 @@ function Distortion({ effect }: DistortionParams) {
             effect._effect.distortion = Number(target.value)
             setDistortion(Number(target.value))
           }}
-          disabled={!effect._enabled}
         />
       </div>
     </>
