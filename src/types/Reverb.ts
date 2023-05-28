@@ -8,9 +8,9 @@ interface ReverbOptions extends EffectOptions {
   preDelay: Seconds;
 }
 
-export class Reverb extends Effect {
+export class Reverb extends Effect<ToneReverb> {
   constructor(
-    options: Partial<ReverbOptions> | undefined = undefined,
+    options: Partial<ReverbOptions> = { wet: 0.6, decay: 3 },
     enabled = false
   ) {
     super("reverb", new ToneReverb(options), enabled);

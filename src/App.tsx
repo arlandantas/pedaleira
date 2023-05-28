@@ -13,7 +13,11 @@ function App() {
   const [isListening, setListening] = useState(false);
   const [currentSource, setCurrentSource] = useState<SourceType>("synth");
   const [effectType, setEffectType] = useState<EffectType>("distortion");
-  const [effects, updateEffects] = useState<Effect[]>([]);
+  const [effects, updateEffects] = useState<Effect[]>([
+    new Distortion(),
+    new Gain(),
+    new Reverb(),
+  ]);
 
   const micSource = useMemo(() => new UserMedia(), []);
 
@@ -113,7 +117,6 @@ function App() {
 
   const onEffectsUpdate = (updatedEffects: Effect[], source: SourceType = currentSource) => {
     updateEffects(updatedEffects);
-    console.log("Updating effect", { updatedEffects });
 
     micSource.disconnect();
     guitarSource.disconnect();

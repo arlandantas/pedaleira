@@ -11,19 +11,17 @@ function EffectList({ effects, onEffectsUpdate: onUpdate }: EffectsListParams) {
     onUpdate(effects.map((e, i) => i === index ? effect : e));
   };
   return (
-    <>
-      <div>
-        <h2>Efeitos</h2>
-        {effects.map(
-          (effect, index) =>
-            <EffectComponent
-              key={effect._id}
-              effect={effect}
-              onEffectUpdate={(effect) => onEffectUpdate(effect, index)}
-            />
-        )}
-      </div>
-    </>
+    <div>
+      <h2>Efeitos</h2>
+      {effects.map(
+        (effect, index) =>
+          <EffectComponent
+            key={effect._id}
+            effect={effect}
+            onEffectUpdate={(effect) => onEffectUpdate(effect, index)}
+          />
+      )}
+    </div>
   )
 }
 
