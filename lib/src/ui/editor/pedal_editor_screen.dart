@@ -17,21 +17,39 @@ class PedalEditorScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(kPedalNames[pedal.slot]!)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
-        child: Wrap(
-          spacing: 32,
-          runSpacing: 32,
-          children: pedal.params.entries.map((entry) {
-            final range = kParamRanges[entry.key] ?? (0.0, 1.0);
-            return KnobWidget(
-              label: entry.key,
-              value: entry.value,
-              min: range.$1,
-              max: range.$2,
-              onChanged: (v) => ref
-                  .read(pedalboardProvider.notifier)
-                  .updateParam(slot, entry.key, v),
-            );
-          }).toList(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Enabled', style: TextStyle(fontSize: 16)),
+                Switch(
+                  value: !pedal.bypassed,
+                  onChanged: (_) => ref
+                      .read(pedalboardProvider.notifier)
+                      .toggleBypass(slot),
+                ),
+              ],
+            ),
+            const Divider(height: 32),
+            Wrap(
+              spacing: 32,
+              runSpacing: 32,
+              children: pedal.params.entries.map((entry) {
+                final range = kParamRanges[entry.key] ?? (0.0, 1.0);
+                return KnobWidget(
+                  label: entry.key,
+                  value: entry.value,
+                  min: range.$1,
+                  max: range.$2,
+                  onChanged: (v) => ref
+                      .read(pedalboardProvider.notifier)
+                      .updateParam(slot, entry.key, v),
+                );
+              }).toList(),
+            ),
+          ],
         ),
       ),
     );
