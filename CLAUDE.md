@@ -68,10 +68,26 @@ After any toolchain change, clean before rebuilding:
 rm -rf build/
 ```
 
+## Running CLI Commands (agents: read this)
+
+Both `flutter` and `cargo` are available via `~/.profile`. The Bash tool starts a login shell, so they are on PATH automatically — **no `export PATH=...` prefix needed**.
+
+```bash
+flutter test          # just works
+cargo build           # just works
+```
+
+If a command is not found, the shell is not login-sourced. Fix with:
+```bash
+bash -l -c 'flutter test'
+```
+
+**Never use the snap `flutter`** — it ships a broken `ld` that silently breaks Cargokit's Rust compilation. The tarball install at `~/flutter/bin` is the only valid one.
+
 ## Environment Notes
 
-- **Flutter:** installed from tarball at `~/flutter/bin` — do NOT use the snap version (`sudo snap install flutter`). The snap poisons PATH with a broken `ld` that breaks Cargokit's Rust compilation.
-- **Rust:** installed via rustup, bin at `~/.cargo/bin/`. Both paths are in `/etc/environment`.
+- **Flutter:** installed from tarball at `~/flutter/bin`, added to PATH in `~/.profile`. Do NOT install via snap.
+- **Rust:** installed via rustup, bin at `~/.cargo/bin/`, sourced via `~/.profile` → `.cargo/env`.
 - **Codegen:** after changing Rust API surface: `flutter_rust_bridge_codegen generate` from project root.
 
 ## Target Platform
