@@ -17,31 +17,48 @@ class PedalboardScreen extends StatelessWidget {
       ),
       body: OrientationBuilder(
         builder: (context, orientation) {
-          final crossAxisCount =
-              orientation == Orientation.portrait ? 2 : 4;
-          return Column(
-            children: [
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.2,
+          final crossAxisCount = orientation == Orientation.portrait ? 2 : 4;
+          final rowCount = orientation == Orientation.portrait ? 4 : 2;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              const reverbHeight = 72.0;
+              const reverbBottomPad = 16.0;
+              const gridPadTop = 16.0;
+              const gridPadBottom = 8.0;
+              const tileSpacing = 12.0;
+              final gridContentHeight = constraints.maxHeight
+                  - reverbHeight
+                  - reverbBottomPad
+                  - gridPadTop
+                  - gridPadBottom;
+              final tileHeight =
+                  (gridContentHeight - tileSpacing * (rowCount - 1)) / rowCount;
+              return Column(
+                children: [
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        mainAxisExtent: tileHeight,
+                      ),
+                      itemCount: 8,
+                      itemBuilder: (_, i) => PedalTile(slot: i),
+                    ),
                   ),
-                  itemCount: 8,
-                  itemBuilder: (_, i) => PedalTile(slot: i),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: SizedBox(
-                  height: 72,
-                  child: PedalTile(slot: 8),
-                ),
-              ),
-            ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: SizedBox(
+                      height: reverbHeight,
+                      child: PedalTile(slot: 8),
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
