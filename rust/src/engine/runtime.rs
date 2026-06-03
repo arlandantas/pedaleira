@@ -7,7 +7,9 @@ use ringbuf::{traits::*, HeapRb};
 use crate::engine::make_engine;
 use crate::engine::handle::EngineHandle;
 
-// Safety: cpal's ALSA Stream is safe to send across threads on Linux.
+// Safety: cpal's ALSA Stream is Send-safe on Linux/ALSA. Gate to Linux to
+// prevent silent UB if compiled for macOS (CoreAudio) or Windows (WASAPI).
+#[cfg(target_os = "linux")]
 unsafe impl Send for Runtime {}
 
 pub struct RuntimeConfig {

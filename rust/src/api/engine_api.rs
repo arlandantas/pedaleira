@@ -32,12 +32,13 @@ pub fn stop_engine() {
 }
 
 /// Toggle bypass for a slot (0=noise gate … 8=reverb).
+/// Throws on error (engine not running, command ring full).
 #[flutter_rust_bridge::frb(sync)]
-pub fn toggle_bypass(slot: u8, bypass: bool) {
-    if let Ok(mut guard) = ENGINE.lock() {
-        if let Some((_, ref mut handle)) = *guard {
-            handle.toggle_bypass(slot, bypass);
-        }
+pub fn toggle_bypass(slot: u8, bypass: bool) -> Result<(), String> {
+    let mut guard = ENGINE.lock().map_err(|e| e.to_string())?;
+    match guard.as_mut() {
+        Some((_, handle)) => handle.toggle_bypass(slot, bypass),
+        None => Err("engine not running".to_string()),
     }
 }
 

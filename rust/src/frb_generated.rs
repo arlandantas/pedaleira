@@ -234,10 +234,8 @@ fn wire__crate__api__engine_api__toggle_bypass_impl(
             let api_slot = <u8>::sse_decode(&mut deserializer);
             let api_bypass = <bool>::sse_decode(&mut deserializer);
             deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok = Result::<_, ()>::Ok({
-                    crate::api::engine_api::toggle_bypass(api_slot, api_bypass);
-                })?;
+            transform_result_sse::<_, String>((move || {
+                let output_ok = crate::api::engine_api::toggle_bypass(api_slot, api_bypass)?;
                 Ok(output_ok)
             })())
         },

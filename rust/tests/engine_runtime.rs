@@ -18,7 +18,7 @@ fn runtime_plays_and_writes_wav() {
     let (runtime, mut handle) = Runtime::start(config).expect("Runtime::start failed");
 
     // Enable overdrive (slot 2) and let it run for 2 seconds
-    handle.toggle_bypass(2, false);
+    handle.toggle_bypass(2, false).unwrap();
     handle.set_param(2, r#"{"drive": 5.0, "tone": 0.6}"#).unwrap();
     std::thread::sleep(std::time::Duration::from_secs(2));
 

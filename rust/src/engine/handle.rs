@@ -12,8 +12,10 @@ impl EngineHandle {
         Self { prod }
     }
 
-    pub fn toggle_bypass(&mut self, slot: u8, bypass: bool) {
-        let _ = self.prod.try_push(Command::ToggleBypass { slot, bypass });
+    pub fn toggle_bypass(&mut self, slot: u8, bypass: bool) -> Result<(), String> {
+        self.prod
+            .try_push(Command::ToggleBypass { slot, bypass })
+            .map_err(|_| "command ring full".to_string())
     }
 
     pub fn set_param(&mut self, slot: u8, json: &str) -> Result<(), String> {
@@ -66,7 +68,7 @@ mod tests {
     fn toggle_bypass_enables_noise_gate() {
         let (mut engine, prod) = make_engine(44100.0);
         let mut handle = EngineHandle::new(prod);
-        handle.toggle_bypass(0, false);
+        handle.toggle_bypass(0, false).unwrap();
         let mut buf = vec![0.001f32; 512];
         engine.process_block(&mut buf);
         assert!(buf.iter().all(|&s| s == 0.0));
@@ -76,7 +78,7 @@ mod tests {
     fn set_param_json_lowers_noise_gate_threshold() {
         let (mut engine, prod) = make_engine(44100.0);
         let mut handle = EngineHandle::new(prod);
-        handle.toggle_bypass(0, false);
+        handle.toggle_bypass(0, false).unwrap();
         handle.set_param(0, r#"{"threshold": 0.01}"#).unwrap();
         let mut buf = vec![0.5f32; 512];
         engine.process_block(&mut buf);
