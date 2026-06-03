@@ -19,11 +19,11 @@
 - [x] Effects chain (9-slot serial + bypass + param dispatch, 5 tests)
 
 ## Phase 2 — Live Audio + Bridge API
-- [ ] cpal audio I/O (input → process → output)
-- [ ] Effects chain struct (8 fixed slots + reverb)
-- [ ] Lock-free param sync (ringbuf SPSC)
-- [ ] flutter_rust_bridge API (toggle bypass, set param, load/save preset)
-- [ ] Regenerate bridge bindings
+- [x] cpal audio I/O (WAV looping input → DSP → output device + file tee)
+- [x] Effects chain struct (8 fixed slots + reverb) — reused from Phase 1
+- [x] Lock-free param sync (ringbuf SPSC Command queue)
+- [x] flutter_rust_bridge API (toggle bypass, set param, start/stop engine)
+- [x] Regenerate bridge bindings
 
 ## Phase 3 — Flutter UI
 - [ ] App state + data models (Riverpod)
