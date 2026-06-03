@@ -12,13 +12,23 @@ Real-time, low-latency guitar effects pedal app. Hybrid architecture:
 
 ## Architecture
 
-### Two-phase development model
+### Development phases
 
-**Phase 1 – Algorithm Development (pure Rust):**  
+**Phase 1 – Algorithm Development (pure Rust) ✅**  
 Load a DI `.wav` → run DSP function over float array → save output `.wav`. Use `hound` crate. No live audio, no Flutter. Deterministic, debuggable.
 
-**Phase 2 – UI + Live Integration (Rust + Flutter):**  
-Use a Linux virtual audio cable (`module-null-sink`) + `pavucontrol` to route a looping DI `.wav` (via VLC) into the Rust `cpal` input. Connect Flutter knobs via `flutter_rust_bridge`.
+**Phase 2 – Live Audio + Bridge API ✅**  
+`cpal` audio I/O — reads `sample_audios/guitar_di.wav` on loop, processes through the effects chain, plays to system output. Lock-free SPSC command queue for real-time param sync. `flutter_rust_bridge` API: `start_engine`, `stop_engine`, `toggle_bypass`, `set_param`.
+
+**Phase 3 – Flutter UI ✅**  
+Full Flutter UI with Riverpod state management, repository pattern (fake impls for testing), adaptive pedalboard grid, rotary knobs (CustomPainter), pedal editor screen, preset save/load (JSON files). 30 tests; none require audio hardware.
+
+**Phase 4 – Raspberry Pi / Production (next)**  
+BLE or WiFi transport replacing the local bridge; Flutter app targeting phone; Rust engine as systemd service on Patchbox OS; GPIO footswitches; I2C OLED display.
+
+### Live audio input (Phase 2 dev setup)
+
+For live guitar testing (instead of the WAV loop): create a Linux virtual audio cable (`module-null-sink`) + `pavucontrol` to route VLC's output into the Rust `cpal` input.
 
 ### Audio Thread Rules (CRITICAL — never break these)
 
@@ -54,18 +64,32 @@ UI → audio thread communication must use lock-free primitives: atomic variable
 ## Build Commands
 
 ```bash
-# Rust only (Phase 1 DSP dev)
+# Run all tests (no audio hardware needed)
+flutter test                       # 30 Flutter tests
+cargo test                         # Rust DSP tests (from rust/)
+
+# Run the app (requires sample_audios/guitar_di.wav)
+flutter run -d linux               # dev mode with hot reload
+
+# Build release
+flutter build linux                # from project root
+
+# Rust only (DSP development)
 cargo build                        # from rust/
 cargo build --release
-
-# Full app (Flutter + Rust bridge)
-flutter build linux                # from project root
-flutter run -d linux               # dev mode with hot reload
 ```
 
 After any toolchain change, clean before rebuilding:
 ```bash
 rm -rf build/
+```
+
+### Audio sample
+
+The engine expects `sample_audios/guitar_di.wav` (44100 Hz, mono, 16-bit PCM). A converted sample is already present. To replace it:
+
+```bash
+ffmpeg -i your_track.mp3 -ar 44100 -ac 1 -sample_fmt s16 sample_audios/guitar_di.wav
 ```
 
 ## Running CLI Commands (agents: read this)
