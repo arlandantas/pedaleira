@@ -67,4 +67,32 @@ void main() {
 
     expect(container.read(presetListProvider).value!, isEmpty);
   });
+
+  test('duplicatePreset saves copy with " - copy" suffix and navigates to it', () async {
+    final container = makeContainer();
+    await container.read(presetListProvider.future);
+    final notifier = container.read(presetListProvider.notifier);
+
+    await notifier.saveCurrentAs('Lead', _defaultPedals());
+    await notifier.duplicatePreset('Lead', _defaultPedals());
+
+    final presets = container.read(presetListProvider).value!;
+    expect(presets.length, 2);
+    expect(presets.any((p) => p.name == 'Lead - copy'), isTrue);
+    expect(container.read(activePresetIndexProvider), 1);
+  });
+
+  test('renamePreset replaces old name with new name and navigates to it', () async {
+    final container = makeContainer();
+    await container.read(presetListProvider.future);
+    final notifier = container.read(presetListProvider.notifier);
+
+    await notifier.saveCurrentAs('Old', _defaultPedals());
+    await notifier.renamePreset('Old', 'New', _defaultPedals());
+
+    final presets = container.read(presetListProvider).value!;
+    expect(presets.length, 1);
+    expect(presets.first.name, 'New');
+    expect(container.read(activePresetIndexProvider), 0);
+  });
 }
