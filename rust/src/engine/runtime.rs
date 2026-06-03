@@ -26,6 +26,7 @@ pub struct Runtime {
 
 impl Drop for Runtime {
     fn drop(&mut self) {
+        let _ = StreamTrait::pause(&self._stream);
         self.shutdown.store(true, Ordering::Relaxed);
         if let Some(h) = self.reader_handle.take() { let _ = h.join(); }
         if let Some(h) = self.sink_handle.take() { let _ = h.join(); }
@@ -42,6 +43,7 @@ impl Runtime {
         let handle = EngineHandle::new(cmd_prod);
 
         // 3. Sample ring: reader thread → audio callback
+        // 4096 samples ≈ 93 ms at 44100 Hz — comfortably larger than typical ALSA buffer (256–2048 samples)
         let (mut sample_prod, mut sample_cons) = HeapRb::<f32>::new(4096).split();
 
         // 4. File sink ring: audio callback → writer thread (optional)
