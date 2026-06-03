@@ -21,7 +21,7 @@ impl EngineHandle {
     pub fn set_param(&mut self, slot: u8, json: &str) -> Result<(), String> {
         let params = parse_params(slot, json)?;
         self.prod
-            .try_push(Command::SetParam { slot, params })
+            .try_push(Command::SetParam { params })
             .map_err(|_| "command ring full".to_string())
     }
 }

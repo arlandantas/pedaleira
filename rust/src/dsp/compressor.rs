@@ -30,6 +30,14 @@ impl Compressor {
         self.makeup_gain = compute_makeup_gain(self.threshold_db, ratio);
     }
 
+    pub fn set_attack(&mut self, sample_rate: f32, attack_s: f32) {
+        self.attack_coeff = (-1.0 / (sample_rate * attack_s)).exp();
+    }
+
+    pub fn set_release(&mut self, sample_rate: f32, release_s: f32) {
+        self.release_coeff = (-1.0 / (sample_rate * release_s)).exp();
+    }
+
     pub fn process(&mut self, buffer: &mut [f32]) {
         for sample in buffer.iter_mut() {
             let abs = sample.abs();

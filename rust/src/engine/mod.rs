@@ -10,7 +10,7 @@ use crate::dsp::chain::{EffectsChain, EffectParams};
 #[derive(Debug, Clone)]
 pub enum Command {
     ToggleBypass { slot: u8, bypass: bool },
-    SetParam { slot: u8, params: EffectParams },
+    SetParam { params: EffectParams },
 }
 
 pub struct AudioEngine {
@@ -34,7 +34,7 @@ impl AudioEngine {
                 Command::ToggleBypass { slot, bypass } => {
                     self.chain.set_bypass(slot as usize, bypass);
                 }
-                Command::SetParam { slot: _, params } => {
+                Command::SetParam { params } => {
                     self.chain.apply_params(self.sample_rate, &params);
                 }
             }
@@ -85,7 +85,6 @@ mod tests {
         prod.try_push(Command::ToggleBypass { slot: 0, bypass: false }).unwrap();
         // Lower threshold to 0.01 — signal 0.5 passes through
         prod.try_push(Command::SetParam {
-            slot: 0,
             params: EffectParams::NoiseGate(NoiseGateParams { threshold: 0.01 }),
         }).unwrap();
         let mut buf = vec![0.5f32; 512];

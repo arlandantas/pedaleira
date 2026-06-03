@@ -56,6 +56,8 @@ impl EffectsChain {
             EffectParams::Compressor(p) => {
                 self.compressor.set_threshold_db(p.threshold_db);
                 self.compressor.set_ratio(p.ratio);
+                self.compressor.set_attack(sample_rate, p.attack);
+                self.compressor.set_release(sample_rate, p.release);
             }
             EffectParams::Overdrive(p)  => {
                 self.overdrive.set_drive(p.drive);
