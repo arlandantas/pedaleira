@@ -69,7 +69,7 @@ void main() {
     await tester.pumpWidget(makeTestApp(repo: repo));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Save'));
+    await tester.tap(find.byIcon(Icons.save));
     await tester.pumpAndSettle();
 
     expect((await repo.loadAll()).length, 1);

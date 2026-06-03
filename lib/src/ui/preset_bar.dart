@@ -44,10 +44,30 @@ class PresetBar extends ConsumerWidget {
                   ? () => _navigate(ref, presets, activeIndex + 1)
                   : null,
             ),
-            TextButton(
+            IconButton(
+              icon: const Icon(Icons.save),
+              tooltip: 'Save',
               onPressed: () =>
-                  _save(context, ref, presets, activeIndex, pedalboard),
-              child: const Text('Save'),
+                  _save(context, ref, presets, clampedIndex, pedalboard),
+            ),
+            IconButton(
+              icon: const Icon(Icons.copy),
+              tooltip: 'Duplicate preset',
+              onPressed: hasPresets
+                  ? () => _duplicate(ref, presets[clampedIndex], pedalboard)
+                  : null,
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Rename preset',
+              onPressed: hasPresets
+                  ? () => _rename(
+                        context,
+                        ref,
+                        presets[clampedIndex],
+                        pedalboard,
+                      )
+                  : null,
             ),
           ],
         );
@@ -70,14 +90,13 @@ class PresetBar extends ConsumerWidget {
     List<PedalState> pedalboard,
   ) async {
     if (presets.isNotEmpty) {
-      final currentName =
-          presets[activeIndex.clamp(0, presets.length - 1)].name;
+      final currentName = presets[activeIndex].name;
       await ref
           .read(presetListProvider.notifier)
           .saveCurrentAs(currentName, pedalboard);
     } else {
       if (!context.mounted) return;
-      final name = await _promptName(context);
+      final name = await _promptName(context, title: 'Save Preset', initial: '');
       if (name != null && name.isNotEmpty && context.mounted) {
         await ref
             .read(presetListProvider.notifier)
@@ -86,12 +105,44 @@ class PresetBar extends ConsumerWidget {
     }
   }
 
-  Future<String?> _promptName(BuildContext context) {
-    final controller = TextEditingController();
+  Future<void> _duplicate(
+    WidgetRef ref,
+    Preset current,
+    List<PedalState> pedalboard,
+  ) async {
+    await ref
+        .read(presetListProvider.notifier)
+        .duplicatePreset(current.name, pedalboard);
+  }
+
+  Future<void> _rename(
+    BuildContext context,
+    WidgetRef ref,
+    Preset current,
+    List<PedalState> pedalboard,
+  ) async {
+    final newName = await _promptName(
+      context,
+      title: 'Rename Preset',
+      initial: current.name,
+    );
+    if (newName == null || newName.isEmpty || newName == current.name) return;
+    if (!context.mounted) return;
+    await ref
+        .read(presetListProvider.notifier)
+        .renamePreset(current.name, newName, pedalboard);
+  }
+
+  Future<String?> _promptName(
+    BuildContext context, {
+    required String title,
+    required String initial,
+  }) {
+    final controller = TextEditingController(text: initial);
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Save Preset'),
+        title: Text(title),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(labelText: 'Name'),
@@ -105,7 +156,7 @@ class PresetBar extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Save'),
+            child: const Text('OK'),
           ),
         ],
       ),
