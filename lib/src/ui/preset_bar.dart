@@ -53,7 +53,7 @@ class PresetBar extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (err, st) => const SizedBox.shrink(),
     );
   }
 
