@@ -50,4 +50,20 @@ void main() {
 
     expect(engine.calls.any((c) => c.startsWith('setParam:2:')), isTrue);
   });
+
+  testWidgets('shows Enabled switch, initially off when pedal is bypassed', (tester) async {
+    await tester.pumpWidget(makeTestApp(0)); // slot 0 starts bypassed
+    final switchFinder = find.byType(Switch);
+    expect(switchFinder, findsOneWidget);
+    final sw = tester.widget<Switch>(switchFinder);
+    expect(sw.value, isFalse); // bypassed=true → switch OFF
+  });
+
+  testWidgets('tapping Enabled switch calls toggleBypass on engine', (tester) async {
+    final engine = FakeEngineRepository();
+    await tester.pumpWidget(makeTestApp(0, engine: engine));
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(engine.calls, contains('toggle:0:false'));
+  });
 }
