@@ -102,6 +102,7 @@ impl EffectsChain {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum EffectParams {
     NoiseGate(NoiseGateParams),
     Compressor(CompressorParams),
