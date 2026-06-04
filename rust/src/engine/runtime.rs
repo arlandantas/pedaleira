@@ -123,7 +123,7 @@ impl Runtime {
         let device = candidates.into_iter()
             .find(|d| {
                 d.supported_output_configs()
-                    .map(|configs| configs
+                    .map(|mut configs| configs
                         .any(|c| c.min_sample_rate().0 <= sample_rate
                                 && sample_rate <= c.max_sample_rate().0))
                     .unwrap_or(false)
