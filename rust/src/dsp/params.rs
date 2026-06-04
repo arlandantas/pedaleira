@@ -26,3 +26,6 @@ pub struct DelayParams       { pub time_ms: f32, pub feedback: f32, pub mix: f32
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReverbParams      { pub room_size: f32, pub mix: f32 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BoostParams       { pub gain: f32 }

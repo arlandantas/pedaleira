@@ -7,5 +7,6 @@ pub mod tremolo;
 pub mod chorus;
 pub mod delay;
 pub mod reverb;
+pub mod boost;
 pub mod chain;
 pub mod params;
