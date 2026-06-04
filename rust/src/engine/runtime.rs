@@ -104,8 +104,15 @@ impl Runtime {
         // can let the user pick the output device at runtime.
         //
         // Build candidate list: system default first, then all enumerated devices.
-        // Filter by capability before building the stream to avoid "device unavailable"
-        // errors from hw: or virtual devices that reject f32/mono streams.
+        // We probe by actually opening a trial stream (immediately dropped) rather
+        // than calling supported_output_configs(), which fails under ALSA dmix/dsnoop
+        // even for devices that can open streams successfully (e.g. PulseAudio).
+        let stream_config = StreamConfig {
+            channels: 1,
+            sample_rate: SampleRate(sample_rate),
+            buffer_size: BufferSize::Default,
+        };
+
         let mut candidates: Vec<cpal::Device> = Vec::new();
         if let Some(d) = host.default_output_device() { candidates.push(d); }
         if let Ok(devs) = host.output_devices() {
@@ -116,30 +123,23 @@ impl Runtime {
                 }
             }
         }
-        // Accept any device that supports the WAV's sample rate regardless of
-        // channel count — PulseAudio/PipeWire advertise stereo but accept mono
-        // streams fine. Raw hw: devices that fail to probe are skipped via
-        // unwrap_or(false).
+
         let device = candidates.into_iter()
             .find(|d| {
-                d.supported_output_configs()
-                    .map(|mut configs| configs
-                        .any(|c| c.min_sample_rate().0 <= sample_rate
-                                && sample_rate <= c.max_sample_rate().0))
-                    .unwrap_or(false)
+                // Try opening a silent trial stream; drop it immediately on success.
+                d.build_output_stream(
+                    &stream_config,
+                    |_: &mut [f32], _| {},
+                    |_| {},
+                    None,
+                ).is_ok()
             })
             .ok_or_else(|| format!(
-                "no output device supports {}Hz; check PulseAudio/PipeWire is running",
+                "no output device could open a {}Hz mono stream; check PulseAudio/PipeWire is running",
                 sample_rate
             ))?;
 
         eprintln!("[engine] using output device: {}", device.name().unwrap_or_else(|_| "<unknown>".into()));
-
-        let stream_config = StreamConfig {
-            channels: 1,
-            sample_rate: SampleRate(sample_rate),
-            buffer_size: BufferSize::Default,
-        };
         let play_output = config.play_output;
         let mut engine = engine;
 
