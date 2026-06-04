@@ -31,12 +31,10 @@ pub fn start_engine(
 /// Stop the audio engine and release all resources.
 #[flutter_rust_bridge::frb(sync)]
 pub fn stop_engine() {
-    if let Ok(mut guard) = ENGINE.lock() {
-        *guard = None;
-    }
-    if let Ok(mut m) = MUTE.lock() {
-        *m = None;
-    }
+    let Ok(mut guard) = ENGINE.lock() else { return };
+    let Ok(mut m) = MUTE.lock() else { return };
+    *guard = None;
+    *m = None;
 }
 
 /// Toggle bypass for a slot (0=noise gate … 9=boost).

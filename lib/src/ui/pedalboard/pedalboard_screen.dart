@@ -60,9 +60,9 @@ class PedalboardScreen extends StatelessWidget {
                       height: reverbRowHeight,
                       child: Row(
                         children: [
-                          Expanded(child: PedalTile(slot: 9)), // Boost
-                          const SizedBox(width: 12),
                           Expanded(child: PedalTile(slot: 8)), // Reverb
+                          const SizedBox(width: 12),
+                          Expanded(child: PedalTile(slot: 9)), // Boost
                         ],
                       ),
                     ),

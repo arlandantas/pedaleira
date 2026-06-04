@@ -53,6 +53,7 @@ UI → audio thread communication must use lock-free primitives: atomic variable
 | 7    | Tremolo             |
 | 8    | Delay               |
 | Out  | Reverb (global)     |
+| 9    | Boost (output gain) |
 
 ### Flutter UI Model
 
