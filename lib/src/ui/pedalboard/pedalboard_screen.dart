@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pedal_tile.dart';
+import 'mute_bar.dart';
 import '../preset_bar.dart';
 
 class PedalboardScreen extends StatelessWidget {
@@ -21,14 +22,18 @@ class PedalboardScreen extends StatelessWidget {
           final rowCount = orientation == Orientation.portrait ? 4 : 2;
           return LayoutBuilder(
             builder: (context, constraints) {
-              const reverbHeight = 72.0;
-              const reverbBottomPad = 16.0;
+              const reverbRowHeight = 72.0;
+              const reverbRowBottomPad = 8.0;
+              const muteBarHeight = 56.0;
+              const muteBarBottomPad = 16.0;
               const gridPadTop = 16.0;
               const gridPadBottom = 8.0;
               const tileSpacing = 12.0;
               final gridContentHeight = constraints.maxHeight
-                  - reverbHeight
-                  - reverbBottomPad
+                  - reverbRowHeight
+                  - reverbRowBottomPad
+                  - muteBarHeight
+                  - muteBarBottomPad
                   - gridPadTop
                   - gridPadBottom;
               final tileHeight =
@@ -50,12 +55,19 @@ class PedalboardScreen extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, reverbRowBottomPad),
                     child: SizedBox(
-                      height: reverbHeight,
-                      child: PedalTile(slot: 8),
+                      height: reverbRowHeight,
+                      child: Row(
+                        children: [
+                          Expanded(child: PedalTile(slot: 9)), // Boost
+                          const SizedBox(width: 12),
+                          Expanded(child: PedalTile(slot: 8)), // Reverb
+                        ],
+                      ),
                     ),
                   ),
+                  const MuteBar(),
                 ],
               );
             },
