@@ -55,6 +55,9 @@ fn parse_params(slot: u8, json: &str) -> Result<EffectParams, String> {
         8 => serde_json::from_str::<ReverbParams>(json)
             .map(EffectParams::Reverb)
             .map_err(|e| e.to_string()),
+        9 => serde_json::from_str::<BoostParams>(json)
+            .map(EffectParams::Boost)
+            .map_err(|e| e.to_string()),
         _ => Err(format!("unknown slot {slot}")),
     }
 }
@@ -89,7 +92,7 @@ mod tests {
     fn set_param_returns_error_for_unknown_slot() {
         let (_engine, prod) = make_engine(44100.0);
         let mut handle = EngineHandle::new(prod);
-        assert!(handle.set_param(9, r#"{}"#).is_err());
+        assert!(handle.set_param(10, r#"{}"#).is_err());
     }
 
     #[test]
@@ -100,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn set_param_accepts_all_9_slots() {
+    fn set_param_accepts_all_10_slots() {
         let (_engine, prod) = make_engine(44100.0);
         let mut handle = EngineHandle::new(prod);
         assert!(handle.set_param(0, r#"{"threshold": 0.01}"#).is_ok());
@@ -112,5 +115,6 @@ mod tests {
         assert!(handle.set_param(6, r#"{"rate": 4.0, "depth": 0.5}"#).is_ok());
         assert!(handle.set_param(7, r#"{"time_ms": 300.0, "feedback": 0.4, "mix": 0.4}"#).is_ok());
         assert!(handle.set_param(8, r#"{"room_size": 0.5, "mix": 0.3}"#).is_ok());
+        assert!(handle.set_param(9, r#"{"gain": 1.0}"#).is_ok());
     }
 }

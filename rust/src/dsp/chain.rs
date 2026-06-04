@@ -8,6 +8,7 @@ use crate::dsp::{
     tremolo::Tremolo,
     delay::Delay,
     reverb::Reverb,
+    boost::Boost,
 };
 use crate::dsp::params::*;
 
@@ -21,7 +22,8 @@ pub struct EffectsChain {
     tremolo:     Tremolo,
     delay:       Delay,
     reverb:      Reverb,
-    bypass: [bool; 9], // indices 0–8: noise_gate..reverb
+    boost:       Boost,
+    bypass: [bool; 10], // indices 0–9: noise_gate..boost
 }
 
 impl EffectsChain {
@@ -36,18 +38,19 @@ impl EffectsChain {
             tremolo:     Tremolo::new(sample_rate, 4.0, 0.5),
             delay:       Delay::new(sample_rate, 300.0, 0.4, 0.4),
             reverb:      Reverb::new(sample_rate, 0.5, 0.3),
-            bypass:      [true; 9], // all bypassed by default
+            boost:       Boost::new(1.0),
+            bypass:      [true; 10],
         }
     }
 
     /// slot 0=noise_gate, 1=compressor, 2=overdrive, 3=distortion,
-    /// 4=fuzz, 5=chorus, 6=tremolo, 7=delay, 8=reverb
+    /// 4=fuzz, 5=chorus, 6=tremolo, 7=delay, 8=reverb, 9=boost
     pub fn set_bypass(&mut self, slot: usize, bypass: bool) {
-        if slot < 9 { self.bypass[slot] = bypass; }
+        if slot < 10 { self.bypass[slot] = bypass; }
     }
 
     pub fn is_bypassed(&self, slot: usize) -> bool {
-        slot >= 9 || self.bypass[slot]
+        slot >= 10 || self.bypass[slot]
     }
 
     pub fn apply_params(&mut self, sample_rate: f32, params: &EffectParams) {
@@ -88,6 +91,7 @@ impl EffectsChain {
                 self.reverb.set_room_size(p.room_size);
                 self.reverb.set_mix(p.mix);
             }
+            EffectParams::Boost(p)      => self.boost.set_gain(p.gain),
         }
     }
 
@@ -101,6 +105,7 @@ impl EffectsChain {
         if !self.bypass[6] { self.tremolo.process(buffer); }
         if !self.bypass[7] { self.delay.process(buffer); }
         if !self.bypass[8] { self.reverb.process(buffer); }
+        if !self.bypass[9] { self.boost.process(buffer); }
     }
 }
 
@@ -115,4 +120,5 @@ pub enum EffectParams {
     Tremolo(TremoloParams),
     Delay(DelayParams),
     Reverb(ReverbParams),
+    Boost(BoostParams),
 }

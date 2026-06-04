@@ -17,7 +17,7 @@ fn chain_all_bypassed_passes_signal() {
 #[test]
 fn chain_processes_without_panic() {
     let mut chain = EffectsChain::new(44100.0);
-    for i in 0..9 { chain.set_bypass(i, false); }
+    for i in 0..10 { chain.set_bypass(i, false); }
     let mut buf = vec![0.3f32; 512];
     chain.process(&mut buf);
     assert!(buf.iter().all(|s| s.is_finite()), "full chain must produce finite output");
@@ -78,10 +78,23 @@ fn chain_wav_roundtrip_full() {
     let samples = dsp_wav::load_wav_mono_f32("test_assets/di_guitar.wav");
     let mut chain = EffectsChain::new(44100.0);
     // Enable all effects
-    for i in 0..9 { chain.set_bypass(i, false); }
+    for i in 0..10 { chain.set_bypass(i, false); }
     let mut buf = samples.clone();
     chain.process(&mut buf);
     dsp_wav::save_wav_mono_f32("/tmp/pedaleira_out_full_chain.wav", &buf, 44100);
     assert_eq!(buf.len(), samples.len());
     assert!(buf.iter().all(|s| s.is_finite()));
+}
+
+#[test]
+fn boost_at_gain_2_doubles_signal() {
+    let mut chain = EffectsChain::new(44100.0);
+    chain.set_bypass(9, false);
+    chain.apply_params(44100.0, &EffectParams::Boost(BoostParams { gain: 2.0 }));
+    let mut buf = vec![0.25f32; 512];
+    chain.process(&mut buf);
+    assert!(
+        buf.iter().all(|&s| (s - 0.5).abs() < 1e-6),
+        "boost x2 should double 0.25 to 0.5"
+    );
 }
