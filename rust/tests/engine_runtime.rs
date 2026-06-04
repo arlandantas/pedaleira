@@ -1,5 +1,6 @@
 use rust_lib_pedaleira::engine::runtime::{Runtime, RuntimeConfig};
 use std::path::Path;
+use std::sync::{Arc, atomic::AtomicBool};
 
 #[test]
 #[ignore] // requires audio hardware — run with: cargo test -- --ignored
@@ -15,7 +16,8 @@ fn runtime_plays_and_writes_wav() {
         output_path: output.to_string(),
     };
 
-    let (runtime, mut handle) = Runtime::start(config).expect("Runtime::start failed");
+    let muted = Arc::new(AtomicBool::new(false));
+    let (runtime, mut handle) = Runtime::start(config, muted).expect("Runtime::start failed");
 
     // Enable overdrive (slot 2) and let it run for 2 seconds
     handle.toggle_bypass(2, false).unwrap();

@@ -1,11 +1,11 @@
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
 use crate::engine::handle::EngineHandle;
 use crate::engine::runtime::{Runtime, RuntimeConfig};
 
 static ENGINE: Mutex<Option<(Runtime, EngineHandle)>> = Mutex::new(None);
+static MUTE: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
 /// Start the audio engine. Call stop_engine first if already running.
-/// Throws on error (engine already running, WAV load failure, no audio device).
 #[flutter_rust_bridge::frb(sync)]
 pub fn start_engine(
     wav_path: String,
@@ -17,8 +17,13 @@ pub fn start_engine(
     if guard.is_some() {
         return Err("engine already running; call stop_engine first".to_string());
     }
+    let muted = Arc::new(AtomicBool::new(false));
+    {
+        let mut m = MUTE.lock().map_err(|e| e.to_string())?;
+        *m = Some(muted.clone());
+    }
     let config = RuntimeConfig { wav_path, play_output, write_output, output_path };
-    let (runtime, handle) = Runtime::start(config)?;
+    let (runtime, handle) = Runtime::start(config, muted)?;
     *guard = Some((runtime, handle));
     Ok(())
 }
@@ -29,10 +34,12 @@ pub fn stop_engine() {
     if let Ok(mut guard) = ENGINE.lock() {
         *guard = None;
     }
+    if let Ok(mut m) = MUTE.lock() {
+        *m = None;
+    }
 }
 
-/// Toggle bypass for a slot (0=noise gate … 8=reverb).
-/// Throws on error (engine not running, command ring full).
+/// Toggle bypass for a slot (0=noise gate … 9=boost).
 #[flutter_rust_bridge::frb(sync)]
 pub fn toggle_bypass(slot: u8, bypass: bool) -> Result<(), String> {
     let mut guard = ENGINE.lock().map_err(|e| e.to_string())?;
@@ -42,13 +49,25 @@ pub fn toggle_bypass(slot: u8, bypass: bool) -> Result<(), String> {
     }
 }
 
-/// Set params for a slot via JSON string (see design doc for schema per slot).
-/// Throws on error (engine not running, invalid JSON, unknown slot).
+/// Set params for a slot via JSON string.
 #[flutter_rust_bridge::frb(sync)]
 pub fn set_param(slot: u8, json: String) -> Result<(), String> {
     let mut guard = ENGINE.lock().map_err(|e| e.to_string())?;
     match guard.as_mut() {
         Some((_, handle)) => handle.set_param(slot, &json),
+        None => Err("engine not running".to_string()),
+    }
+}
+
+/// Mute or unmute the audio output. Persists until changed; not part of preset state.
+#[flutter_rust_bridge::frb(sync)]
+pub fn set_mute(muted: bool) -> Result<(), String> {
+    let guard = MUTE.lock().map_err(|e| e.to_string())?;
+    match guard.as_ref() {
+        Some(flag) => {
+            flag.store(muted, Ordering::Relaxed);
+            Ok(())
+        }
         None => Err("engine not running".to_string()),
     }
 }

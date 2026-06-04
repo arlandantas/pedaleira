@@ -7,8 +7,6 @@ use ringbuf::{traits::*, HeapRb};
 use crate::engine::make_engine;
 use crate::engine::handle::EngineHandle;
 
-// Safety: cpal's ALSA Stream is Send-safe on Linux/ALSA. Gate to Linux to
-// prevent silent UB if compiled for macOS (CoreAudio) or Windows (WASAPI).
 #[cfg(target_os = "linux")]
 unsafe impl Send for Runtime {}
 
@@ -36,19 +34,17 @@ impl Drop for Runtime {
 }
 
 impl Runtime {
-    pub fn start(config: RuntimeConfig) -> Result<(Runtime, EngineHandle), String> {
-        // 1. Load WAV into memory
+    pub fn start(
+        config: RuntimeConfig,
+        muted: Arc<AtomicBool>,
+    ) -> Result<(Runtime, EngineHandle), String> {
         let (wav_samples, sample_rate) = load_wav(&config.wav_path)?;
 
-        // 2. Engine + command channel
         let (engine, cmd_prod) = make_engine(sample_rate as f32);
         let handle = EngineHandle::new(cmd_prod);
 
-        // 3. Sample ring: reader thread → audio callback
-        // 4096 samples ≈ 93 ms at 44100 Hz — comfortably larger than typical ALSA buffer (256–2048 samples)
         let (mut sample_prod, mut sample_cons) = HeapRb::<f32>::new(4096).split();
 
-        // 4. File sink ring: audio callback → writer thread (optional)
         let (mut sink_prod_opt, sink_cons_opt) = if config.write_output {
             let (p, c) = HeapRb::<f32>::new(4096).split();
             (Some(p), Some(c))
@@ -58,7 +54,6 @@ impl Runtime {
 
         let shutdown = Arc::new(AtomicBool::new(false));
 
-        // 5. WAV reader thread: loops wav_samples → sample ring
         let shutdown_reader = shutdown.clone();
         let reader_handle = std::thread::spawn(move || {
             let len = wav_samples.len();
@@ -75,7 +70,6 @@ impl Runtime {
             }
         });
 
-        // 6. File sink thread (optional)
         let sink_handle = if config.write_output {
             let mut cons = sink_cons_opt.unwrap();
             let shutdown_sink = shutdown.clone();
@@ -102,21 +96,13 @@ impl Runtime {
             None
         };
 
-        // 7. cpal output stream
         let host = cpal::default_host();
-
-        // TODO(Phase 4): expose device list via bridge API so the Flutter UI
-        // can let the user pick the output device at runtime.
-        //
-        // Priority: system default first (usually PulseAudio/PipeWire on Linux,
-        // which handles format conversion). Raw hw: devices enumerated first by
-        // cpal reject f32 streams, so we only fall back to enumeration when the
-        // default is unavailable.
         let device = host.default_output_device()
             .or_else(|| host.output_devices().ok()?.next())
             .ok_or_else(|| "no output device found".to_string())?;
 
         eprintln!("[engine] using output device: {}", device.name().unwrap_or_else(|_| "<unknown>".into()));
+
         let stream_config = StreamConfig {
             channels: 1,
             sample_rate: SampleRate(sample_rate),
@@ -135,7 +121,7 @@ impl Runtime {
                 if let Some(ref mut sp) = sink_prod_opt {
                     for &s in data.iter() { let _ = sp.try_push(s); }
                 }
-                if !play_output {
+                if !play_output || muted.load(Ordering::Relaxed) {
                     for s in data.iter_mut() { *s = 0.0; }
                 }
             },
@@ -152,7 +138,6 @@ impl Runtime {
     }
 }
 
-/// Load a mono WAV file (any bit depth, float or int) into a Vec<f32>.
 fn load_wav(path: &str) -> Result<(Vec<f32>, u32), String> {
     let mut reader = hound::WavReader::open(path).map_err(|e| e.to_string())?;
     let spec = reader.spec();
