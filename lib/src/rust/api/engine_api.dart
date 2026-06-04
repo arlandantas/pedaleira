@@ -7,7 +7,6 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Start the audio engine. Call stop_engine first if already running.
-/// Throws on error (engine already running, WAV load failure, no audio device).
 void startEngine({
   required String wavPath,
   required bool playOutput,
@@ -23,14 +22,16 @@ void startEngine({
 /// Stop the audio engine and release all resources.
 void stopEngine() => RustLib.instance.api.crateApiEngineApiStopEngine();
 
-/// Toggle bypass for a slot (0=noise gate … 8=reverb).
-/// Throws on error (engine not running, command ring full).
+/// Toggle bypass for a slot (0=noise gate … 9=boost).
 void toggleBypass({required int slot, required bool bypass}) => RustLib
     .instance
     .api
     .crateApiEngineApiToggleBypass(slot: slot, bypass: bypass);
 
-/// Set params for a slot via JSON string (see design doc for schema per slot).
-/// Throws on error (engine not running, invalid JSON, unknown slot).
+/// Set params for a slot via JSON string.
 void setParam({required int slot, required String json}) =>
     RustLib.instance.api.crateApiEngineApiSetParam(slot: slot, json: json);
+
+/// Mute or unmute the audio output. Persists until changed; not part of preset state.
+void setMute({required bool muted}) =>
+    RustLib.instance.api.crateApiEngineApiSetMute(muted: muted);
