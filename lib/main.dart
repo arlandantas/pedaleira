@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'src/data/file_preset_repository.dart';
 import 'src/data/rust_engine_repository.dart';
 import 'src/providers/engine_provider.dart';
 import 'src/rust/frb_generated.dart';
@@ -16,6 +17,7 @@ Future<void> main() async {
   runApp(ProviderScope(
     overrides: [
       engineRepositoryProvider.overrideWithValue(engine),
+      presetRepositoryProvider.overrideWithValue(FilePresetRepository()),
     ],
     child: const App(),
   ));
