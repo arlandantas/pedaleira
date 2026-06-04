@@ -18,10 +18,10 @@ ProviderContainer makeContainer({FakeEngineRepository? engine}) {
 }
 
 void main() {
-  test('initial state has 9 pedals all bypassed with default params', () {
+  test('initial state has 10 pedals all bypassed with default params', () {
     final container = makeContainer();
     final state = container.read(pedalboardProvider);
-    expect(state.length, 9);
+    expect(state.length, 10);
     expect(state.every((p) => p.bypassed), isTrue);
     expect(state[1].params['threshold_db'], -18.0);
   });
@@ -79,7 +79,7 @@ void main() {
     notifier.applyPreset(preset);
 
     expect(container.read(pedalboardProvider)[2].bypassed, isFalse);
-    expect(engine.calls.where((c) => c.startsWith('toggle:')).length, 9);
-    expect(engine.calls.where((c) => c.startsWith('setParam:')).length, 9);
+    expect(engine.calls.where((c) => c.startsWith('toggle:')).length, 10);
+    expect(engine.calls.where((c) => c.startsWith('setParam:')).length, 10);
   });
 }

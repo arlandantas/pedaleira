@@ -22,4 +22,7 @@ class RustEngineRepository implements EngineRepository {
   @override
   void setParam(int slot, String json) =>
       bridge.setParam(slot: slot, json: json);
+
+  @override
+  void setMute(bool muted) => bridge.setMute(muted: muted);
 }

@@ -15,4 +15,7 @@ class FakeEngineRepository implements EngineRepository {
 
   @override
   void setParam(int slot, String json) => calls.add('setParam:$slot:$json');
+
+  @override
+  void setMute(bool muted) => calls.add('setMute:$muted');
 }
