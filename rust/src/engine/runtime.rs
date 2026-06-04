@@ -116,17 +116,20 @@ impl Runtime {
                 }
             }
         }
+        // Accept any device that supports the WAV's sample rate regardless of
+        // channel count — PulseAudio/PipeWire advertise stereo but accept mono
+        // streams fine. Raw hw: devices that fail to probe are skipped via
+        // unwrap_or(false).
         let device = candidates.into_iter()
             .find(|d| {
                 d.supported_output_configs()
                     .map(|configs| configs
-                        .filter(|c| c.channels() == 1)
                         .any(|c| c.min_sample_rate().0 <= sample_rate
                                 && sample_rate <= c.max_sample_rate().0))
                     .unwrap_or(false)
             })
             .ok_or_else(|| format!(
-                "no output device supports mono {}Hz; check PulseAudio/PipeWire is running",
+                "no output device supports {}Hz; check PulseAudio/PipeWire is running",
                 sample_rate
             ))?;
 
