@@ -104,8 +104,19 @@ impl Runtime {
 
         // 7. cpal output stream
         let host = cpal::default_host();
+
+        // TODO(Phase 4): expose device list via bridge API so the Flutter UI
+        // can let the user pick the output device at runtime.
+        //
+        // Priority: system default first (usually PulseAudio/PipeWire on Linux,
+        // which handles format conversion). Raw hw: devices enumerated first by
+        // cpal reject f32 streams, so we only fall back to enumeration when the
+        // default is unavailable.
         let device = host.default_output_device()
-            .ok_or_else(|| "no default output device".to_string())?;
+            .or_else(|| host.output_devices().ok()?.next())
+            .ok_or_else(|| "no output device found".to_string())?;
+
+        eprintln!("[engine] using output device: {}", device.name().unwrap_or_else(|_| "<unknown>".into()));
         let stream_config = StreamConfig {
             channels: 1,
             sample_rate: SampleRate(sample_rate),
