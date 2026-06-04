@@ -7,6 +7,8 @@ use ringbuf::{traits::*, HeapRb};
 use crate::engine::make_engine;
 use crate::engine::handle::EngineHandle;
 
+// Safety: cpal's ALSA Stream is Send-safe on Linux/ALSA. Gate to Linux to
+// prevent silent UB if compiled for macOS (CoreAudio) or Windows (WASAPI).
 #[cfg(target_os = "linux")]
 unsafe impl Send for Runtime {}
 
@@ -97,6 +99,8 @@ impl Runtime {
         };
 
         let host = cpal::default_host();
+        // TODO(Phase 4): expose device list via bridge API so the Flutter UI
+        // can let the user pick the output device at runtime.
         let device = host.default_output_device()
             .or_else(|| host.output_devices().ok()?.next())
             .ok_or_else(|| "no output device found".to_string())?;

@@ -18,12 +18,12 @@ pub fn start_engine(
         return Err("engine already running; call stop_engine first".to_string());
     }
     let muted = Arc::new(AtomicBool::new(false));
+    let config = RuntimeConfig { wav_path, play_output, write_output, output_path };
+    let (runtime, handle) = Runtime::start(config, muted.clone())?;
     {
         let mut m = MUTE.lock().map_err(|e| e.to_string())?;
-        *m = Some(muted.clone());
+        *m = Some(muted);
     }
-    let config = RuntimeConfig { wav_path, play_output, write_output, output_path };
-    let (runtime, handle) = Runtime::start(config, muted)?;
     *guard = Some((runtime, handle));
     Ok(())
 }
