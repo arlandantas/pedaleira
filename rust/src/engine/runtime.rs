@@ -99,11 +99,36 @@ impl Runtime {
         };
 
         let host = cpal::default_host();
+
         // TODO(Phase 4): expose device list via bridge API so the Flutter UI
         // can let the user pick the output device at runtime.
-        let device = host.default_output_device()
-            .or_else(|| host.output_devices().ok()?.next())
-            .ok_or_else(|| "no output device found".to_string())?;
+        //
+        // Build candidate list: system default first, then all enumerated devices.
+        // Filter by capability before building the stream to avoid "device unavailable"
+        // errors from hw: or virtual devices that reject f32/mono streams.
+        let mut candidates: Vec<cpal::Device> = Vec::new();
+        if let Some(d) = host.default_output_device() { candidates.push(d); }
+        if let Ok(devs) = host.output_devices() {
+            for d in devs {
+                let name = d.name().unwrap_or_default();
+                if !candidates.iter().any(|c| c.name().unwrap_or_default() == name) {
+                    candidates.push(d);
+                }
+            }
+        }
+        let device = candidates.into_iter()
+            .find(|d| {
+                d.supported_output_configs()
+                    .map(|configs| configs
+                        .filter(|c| c.channels() == 1)
+                        .any(|c| c.min_sample_rate().0 <= sample_rate
+                                && sample_rate <= c.max_sample_rate().0))
+                    .unwrap_or(false)
+            })
+            .ok_or_else(|| format!(
+                "no output device supports mono {}Hz; check PulseAudio/PipeWire is running",
+                sample_rate
+            ))?;
 
         eprintln!("[engine] using output device: {}", device.name().unwrap_or_else(|_| "<unknown>".into()));
 
