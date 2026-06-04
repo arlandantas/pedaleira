@@ -38,7 +38,7 @@ void main() {
       final preset = Preset(name: 'Clean', pedals: pedals);
       final restored = Preset.fromJson(preset.toJson());
       expect(restored.name, 'Clean');
-      expect(restored.pedals.length, 9);
+      expect(restored.pedals.length, 10);
       expect(restored.pedals[1].slot, PedalSlot.compressor);
     });
   });

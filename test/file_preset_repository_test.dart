@@ -27,7 +27,7 @@ void main() {
     final loaded = await repo.loadAll();
     expect(loaded.length, 1);
     expect(loaded.first.name, 'Clean');
-    expect(loaded.first.pedals.length, 9);
+    expect(loaded.first.pedals.length, 10);
     expect(loaded.first.pedals[1].slot, PedalSlot.compressor);
     expect(loaded.first.pedals[1].params['threshold_db'], -18.0);
   });

@@ -8,6 +8,7 @@ enum PedalSlot {
   tremolo,
   delay,
   reverb,
+  boost,
 }
 
 const Map<PedalSlot, String> kPedalNames = {
@@ -20,6 +21,7 @@ const Map<PedalSlot, String> kPedalNames = {
   PedalSlot.tremolo: 'Tremolo',
   PedalSlot.delay: 'Delay',
   PedalSlot.reverb: 'Reverb',
+  PedalSlot.boost: 'Boost',
 };
 
 const Map<PedalSlot, Map<String, double>> kDefaultParams = {
@@ -37,6 +39,7 @@ const Map<PedalSlot, Map<String, double>> kDefaultParams = {
   PedalSlot.tremolo: {'rate': 4.0, 'depth': 0.5},
   PedalSlot.delay: {'time_ms': 300.0, 'feedback': 0.4, 'mix': 0.4},
   PedalSlot.reverb: {'room_size': 0.5, 'mix': 0.3},
+  PedalSlot.boost: {'gain': 1.0},
 };
 
 // Min/max ranges per param key — used by KnobWidget
@@ -56,6 +59,7 @@ const Map<String, (double, double)> kParamRanges = {
   'time_ms': (50.0, 1000.0),
   'feedback': (0.0, 0.95),
   'room_size': (0.0, 1.0),
+  'gain': (0.0, 4.0),
 };
 
 class PedalState {
