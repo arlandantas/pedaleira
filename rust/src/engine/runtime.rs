@@ -107,11 +107,9 @@ impl Runtime {
         // We probe by actually opening a trial stream (immediately dropped) rather
         // than calling supported_output_configs(), which fails under ALSA dmix/dsnoop
         // even for devices that can open streams successfully (e.g. PulseAudio).
-        let stream_config = StreamConfig {
-            channels: 1,
-            sample_rate: SampleRate(sample_rate),
-            buffer_size: BufferSize::Default,
-        };
+        //
+        // PipeWire/PulseAudio on modern Linux often rejects 1-channel output; probe
+        // both channel counts and use whichever the device accepts.
 
         let mut candidates: Vec<cpal::Device> = Vec::new();
         if let Some(d) = host.default_output_device() { candidates.push(d); }
@@ -124,37 +122,81 @@ impl Runtime {
             }
         }
 
-        let device = candidates.into_iter()
-            .find(|d| {
-                // Try opening a silent trial stream; drop it immediately on success.
-                d.build_output_stream(
-                    &stream_config,
-                    |_: &mut [f32], _| {},
-                    |_| {},
-                    None,
-                ).is_ok()
+        // Returns Some(channels) if the device can open a stream at the given channel count.
+        let probe = |d: &cpal::Device, channels: u16| -> Result<(), String> {
+            let cfg = StreamConfig {
+                channels,
+                sample_rate: SampleRate(sample_rate),
+                buffer_size: BufferSize::Default,
+            };
+            d.build_output_stream(&cfg, |_: &mut [f32], _| {}, |_| {}, None)
+                .map(|_| ())
+                .map_err(|e| e.to_string())
+        };
+
+        eprintln!("[engine] found {} candidate output device(s)", candidates.len());
+        let (device, out_channels) = candidates.into_iter()
+            .find_map(|d| {
+                let name = d.name().unwrap_or_else(|_| "<unknown>".into());
+                match probe(&d, 1) {
+                    Ok(()) => { eprintln!("[engine] probe OK: {} (1ch)", name); return Some((d, 1u16)); }
+                    Err(e) => eprintln!("[engine] probe FAIL: {} (1ch): {}", name, e),
+                }
+                match probe(&d, 2) {
+                    Ok(()) => { eprintln!("[engine] probe OK: {} (2ch)", name); return Some((d, 2u16)); }
+                    Err(e) => eprintln!("[engine] probe FAIL: {} (2ch): {}", name, e),
+                }
+                None
             })
             .ok_or_else(|| format!(
-                "no output device could open a {}Hz mono stream; check PulseAudio/PipeWire is running",
+                "no output device could open a {}Hz stream; check PulseAudio/PipeWire is running",
                 sample_rate
             ))?;
 
-        eprintln!("[engine] using output device: {}", device.name().unwrap_or_else(|_| "<unknown>".into()));
+        eprintln!("[engine] using output device: {} ({}ch)", device.name().unwrap_or_else(|_| "<unknown>".into()), out_channels);
         let play_output = config.play_output;
         let mut engine = engine;
+
+        let stream_config = StreamConfig {
+            channels: out_channels,
+            sample_rate: SampleRate(sample_rate),
+            buffer_size: BufferSize::Default,
+        };
+
+        // Pre-allocate mono scratch buffer for the stereo case; moved into the closure so
+        // no allocation happens on the audio thread.
+        let mut mono_scratch: Vec<f32> = if out_channels > 1 { vec![0.0f32; 4096] } else { Vec::new() };
 
         let stream = device.build_output_stream(
             &stream_config,
             move |data: &mut [f32], _| {
-                for s in data.iter_mut() {
-                    *s = sample_cons.try_pop().unwrap_or(0.0);
-                }
-                engine.process_block(data);
-                if let Some(ref mut sp) = sink_prod_opt {
-                    for &s in data.iter() { let _ = sp.try_push(s); }
-                }
-                if !play_output || muted.load(Ordering::Relaxed) {
-                    for s in data.iter_mut() { *s = 0.0; }
+                let frames = data.len() / out_channels as usize;
+                if out_channels == 1 {
+                    for s in data.iter_mut() {
+                        *s = sample_cons.try_pop().unwrap_or(0.0);
+                    }
+                    engine.process_block(data);
+                    if let Some(ref mut sp) = sink_prod_opt {
+                        for &s in data.iter() { let _ = sp.try_push(s); }
+                    }
+                    if !play_output || muted.load(Ordering::Relaxed) {
+                        for s in data.iter_mut() { *s = 0.0; }
+                    }
+                } else {
+                    // Stereo path: deinterleave into scratch, process, reinterleave.
+                    let scratch = &mut mono_scratch[..frames];
+                    for s in scratch.iter_mut() {
+                        *s = sample_cons.try_pop().unwrap_or(0.0);
+                    }
+                    engine.process_block(scratch);
+                    let silent = !play_output || muted.load(Ordering::Relaxed);
+                    for f in 0..frames {
+                        let s = if silent { 0.0 } else { scratch[f] };
+                        if let Some(ref mut sp) = sink_prod_opt { let _ = sp.try_push(scratch[f]); }
+                        for ch in 0..out_channels as usize {
+                            data[f * out_channels as usize + ch] = s;
+                        }
+                    }
                 }
             },
             |err| eprintln!("cpal stream error: {err}"),
