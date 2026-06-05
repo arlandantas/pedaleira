@@ -39,6 +39,21 @@
 - [x] 30 widget + unit tests (all pass without audio hardware)
 - [x] Sample audio converted to WAV (sample_audios/guitar_di.wav, 44100 Hz mono 16-bit)
 
+## Android Support ✅
+- [x] `unsafe impl Send for Runtime` extended to `target_os = "android"` (Oboe backend)
+- [x] `rust_builder/android/build.gradle` — `compileSdkVersion`/`minSdkVersion` use `flutter.*` variables (no longer hardcoded)
+- [x] Android NDK linker flags added to `rust/.cargo/config.toml`
+- [x] `rust/build.rs` — links `libc++_static` for Android targets
+- [x] Makefile targets: `run-android`, `build-android`, `build-android-release`
+- [x] CMakeLists.txt fix — `native_assets/linux` directory pre-created to prevent CMake install error
+
+## Preset Share & Import ✅
+- [x] Export button in AppBar — on Android: native share sheet (share_plus); on Linux: opens presets folder in file manager (xdg-open)
+- [x] Import button in AppBar — native file picker (file_picker), parses JSON, handles name conflicts (overwrite or save as copy)
+- [x] Pure helpers in `domain/preset_io.dart` (`parsePresetJson`, `resolveImportName`)
+- [x] `Preset.toJsonString()` added to models
+- [x] 47 Flutter tests (all pass without audio hardware)
+
 ## Phase 4 — Production / Raspberry Pi (Pending)
 - [ ] BLE or WiFi transport layer (replace flutter_rust_bridge with network protocol)
 - [ ] Flutter app targets smartphone (Android/iOS build)

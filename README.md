@@ -6,7 +6,7 @@ Real-time, low-latency guitar effects pedal app. Hybrid Rust + Flutter architect
 
 A digital pedalboard with 8 fixed effect slots plus global reverb. Tap a pedal to toggle it on/off; long-press to edit its parameters via rotary knobs. Save and recall named presets instantly.
 
-**Current state:** Fully functional on a single Linux development machine. The Rust audio engine loops a WAV file through the effects chain and plays to the system audio output. The Flutter UI connects to the engine via `flutter_rust_bridge`.
+**Current state:** Fully functional on Linux (development machine) and Android. The Rust audio engine loops a WAV file through the effects chain and plays to the system audio output. The Flutter UI connects to the engine via `flutter_rust_bridge`. Presets can be exported and imported as JSON files.
 
 ## Architecture
 
@@ -17,6 +17,8 @@ A digital pedalboard with 8 fixed effect slots plus global reverb. Tap a pedal t
 | Bridge | `flutter_rust_bridge` 2.12.0 |
 | State | Riverpod (`Notifier` / `AsyncNotifier`) |
 | Persistence | JSON files via `path_provider` |
+| File sharing | `share_plus` (Android) / `xdg-open` (Linux) |
+| File import | `file_picker` |
 
 ### Effects chain (fixed order)
 
@@ -48,11 +50,14 @@ Both `flutter` and `cargo` are on PATH via `~/.profile`. No manual `export` need
 # Run tests (no audio hardware needed)
 flutter test
 
-# Run the app (requires sample_audios/guitar_di.wav)
-flutter run -d linux
+# Linux
+make run             # run on Linux desktop
+make flutter-build   # release build for Linux
 
-# Build release
-flutter build linux
+# Android (device must be connected via USB)
+make run-android           # run on connected Android device
+make build-android         # build debug APK (no device needed)
+make build-android-release # build release APK
 ```
 
 ### Audio input
@@ -82,11 +87,11 @@ rust/src/
   api/          # flutter_rust_bridge-exposed functions
 
 lib/src/
-  domain/       # PedalState, Preset, repository interfaces
+  domain/       # PedalState, Preset, repository interfaces, preset_io helpers
   data/         # FilePresetRepository, RustEngineRepository, fakes
   providers/    # Riverpod notifiers
   ui/           # Screens and widgets
-    pedalboard/ # PedalboardScreen, PedalTile
+    pedalboard/ # PedalboardScreen (+ import/export), PedalTile
     editor/     # PedalEditorScreen, KnobWidget
     preset_bar.dart
 
@@ -99,7 +104,7 @@ docs/
 ## Test suite
 
 ```bash
-flutter test        # 30 tests — runs without audio hardware
+flutter test        # 47 tests — runs without audio hardware
 cargo test          # Rust DSP unit tests (from rust/)
 ```
 

@@ -66,14 +66,15 @@ UI → audio thread communication must use lock-free primitives: atomic variable
 
 ```bash
 # Run all tests (no audio hardware needed)
-flutter test                       # 30 Flutter tests
+flutter test                       # 47 Flutter tests
 cargo test                         # Rust DSP tests (from rust/)
 
-# Run the app (requires sample_audios/guitar_di.wav)
-flutter run -d linux               # dev mode with hot reload
-
-# Build release
-flutter build linux                # from project root
+# Run / build via Makefile
+make run                           # Linux desktop (hot reload)
+make run-android                   # connected Android device (adb auto-detect)
+make flutter-build                 # release build for Linux
+make build-android                 # debug APK (no device needed)
+make build-android-release         # release APK
 
 # Rust only (DSP development)
 cargo build                        # from rust/
