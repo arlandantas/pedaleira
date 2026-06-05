@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 enum PedalSlot {
   noiseGate,
   compressor,
@@ -110,6 +112,8 @@ class Preset {
     'name': name,
     'pedals': pedals.map((p) => p.toJson()).toList(),
   };
+
+  String toJsonString() => jsonEncode(toJson());
 
   factory Preset.fromJson(Map<String, dynamic> json) {
     return Preset(
