@@ -93,6 +93,10 @@ The engine expects `sample_audios/guitar_di.wav` (44100 Hz, mono, 16-bit PCM). A
 ffmpeg -i your_track.mp3 -ar 44100 -ac 1 -sample_fmt s16 sample_audios/guitar_di.wav
 ```
 
+## Git Workflow (agents: read this)
+
+This project is in **pre-MVP development**. Commit directly to `main` — do not create feature branches unless the user explicitly asks for one. When the `finishing-a-development-branch` skill presents options, choose "merge locally" (option 1), which is a no-op when already on `main`.
+
 ## Running CLI Commands (agents: read this)
 
 Both `flutter` and `cargo` are available via `~/.profile`. The Bash tool starts a login shell, so they are on PATH automatically — **no `export PATH=...` prefix needed**.
