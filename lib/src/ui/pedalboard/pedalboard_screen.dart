@@ -106,6 +106,14 @@ class _PedalboardScreenState extends ConsumerState<PedalboardScreen> {
   }
 
   Future<void> _exportPreset() async {
+    if (Platform.isLinux) {
+      final base = await getApplicationDocumentsDirectory();
+      final presetsDir = Directory('${base.path}/presets');
+      if (!await presetsDir.exists()) await presetsDir.create(recursive: true);
+      await Process.run('xdg-open', [presetsDir.path]);
+      return;
+    }
+
     final presets = ref.read(presetListProvider).valueOrNull ?? [];
     final idx = ref.read(activePresetIndexProvider);
     if (presets.isEmpty) return;
