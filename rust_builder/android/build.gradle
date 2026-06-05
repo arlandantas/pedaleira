@@ -29,9 +29,7 @@ android {
         namespace 'com.flutter_rust_bridge.rust_lib_pedaleira'
     }
 
-    // Bumping the plugin compileSdkVersion requires all clients of this plugin
-    // to bump the version in their app.
-    compileSdkVersion 33
+    compileSdkVersion flutter.compileSdkVersion
 
     // Use the NDK version
     // declared in /android/app/build.gradle file of the Flutter project.
@@ -45,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion flutter.minSdkVersion
     }
 }
 

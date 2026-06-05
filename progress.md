@@ -49,6 +49,9 @@
 - [ ] Low-latency tuning: real-time kernel, JACK or pipewire-jack, USB audio interface
 - [ ] Headless Pi mode: engine starts on boot, last preset loaded automatically
 
+## Tech Debt / TODOs
+- [ ] Update vendored `rust_builder/cargokit/` from upstream instead of patching in place — the local `plugin.gradle` was hand-patched to fix a Gradle `project.exec` deprecation; upstream cargokit likely has the same fix already, so the right move is to replace the whole snapshot rather than carry a silent local diff
+
 ## Known Limitations / Tech Debt
 - Audio input is a looping WAV file (`sample_audios/guitar_di.wav`); live microphone/line-in requires a USB audio interface and virtual cable setup (see CLAUDE.md Phase 2 notes)
 - No error UI if the engine fails to start (e.g. WAV file missing)

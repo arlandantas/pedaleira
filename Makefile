@@ -1,7 +1,8 @@
-CARGO = $(HOME)/.cargo/bin/cargo
+CARGO   = $(HOME)/.cargo/bin/cargo
 FLUTTER = $(HOME)/flutter/bin/flutter
+ANDROID_DEVICE = $(shell adb devices | awk 'NR==2{print $$1}')
 
-.PHONY: test build check render run clean
+.PHONY: test build check render run run-android flutter-build build-android build-android-release codegen clean
 
 ## Rust DSP (Phase 1)
 test:
@@ -20,8 +21,17 @@ render:
 run:
 	$(FLUTTER) run -d linux
 
+run-android:
+	$(FLUTTER) run -d $(ANDROID_DEVICE)
+
 flutter-build:
 	$(FLUTTER) build linux
+
+build-android:
+	$(FLUTTER) build apk --debug
+
+build-android-release:
+	$(FLUTTER) build apk --release
 
 codegen:
 	flutter_rust_bridge_codegen generate

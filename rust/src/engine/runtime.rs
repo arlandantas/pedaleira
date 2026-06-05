@@ -7,9 +7,13 @@ use ringbuf::{traits::*, HeapRb};
 use crate::engine::make_engine;
 use crate::engine::handle::EngineHandle;
 
-// Safety: cpal's ALSA Stream is Send-safe on Linux/ALSA. Gate to Linux to
-// prevent silent UB if compiled for macOS (CoreAudio) or Windows (WASAPI).
-#[cfg(target_os = "linux")]
+// Safety: Runtime is only ever accessed while holding the ENGINE Mutex; the
+// audio callback runs on cpal/Oboe's internal thread and communicates only
+// through lock-free SPSC queues and atomics — it never touches the Stream
+// object itself. cpal marks Stream !Send conservatively on Android (Oboe) and
+// Linux (ALSA); actual usage here is sound on both. Gated away from macOS/
+// Windows where different backends may have different constraints.
+#[cfg(any(target_os = "linux", target_os = "android"))]
 unsafe impl Send for Runtime {}
 
 pub struct RuntimeConfig {
