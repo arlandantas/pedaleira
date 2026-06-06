@@ -43,9 +43,11 @@
 - [x] `unsafe impl Send for Runtime` extended to `target_os = "android"` (Oboe backend)
 - [x] `rust_builder/android/build.gradle` — `compileSdkVersion`/`minSdkVersion` use `flutter.*` variables (no longer hardcoded)
 - [x] Android NDK linker flags added to `rust/.cargo/config.toml`
-- [x] `rust/build.rs` — links `libc++_static` for Android targets
+- [x] `rust/build.rs` — links `libc++_static` for Android targets; adds versioned sysroot lib dir to search path so `libc.so` stub is found before `libc.a` (NDK 28 x86_64 PIC regression fix)
+- [x] `rust_builder/cargokit/build_tool/lib/src/android_environment.dart` — linker wrapper strips rustc's anonymous version script and substitutes a named-only `LIBC_N {};` script to satisfy `compiler_builtins` versioned symbols on NDK 28 armv7
 - [x] Makefile targets: `run-android`, `build-android`, `build-android-release`
 - [x] CMakeLists.txt fix — `native_assets/linux` directory pre-created to prevent CMake install error
+- [x] All four Android ABI targets build cleanly with NDK 28 (armv7, aarch64, x86_64, i686)
 
 ## Preset Share & Import ✅
 - [x] Export button in AppBar — on Android: native share sheet (share_plus); on Linux: opens presets folder in file manager (xdg-open)
@@ -68,6 +70,7 @@
 - [ ] Update vendored `rust_builder/cargokit/` from upstream instead of patching in place — the local `plugin.gradle` was hand-patched to fix a Gradle `project.exec` deprecation; upstream cargokit likely has the same fix already, so the right move is to replace the whole snapshot rather than carry a silent local diff
 
 ## Known Limitations / Tech Debt
+- [ ] **Audio click on preset change** — switching presets causes an audible click; likely caused by abrupt parameter changes mid-buffer; needs investigation and a fix (parameter smoothing / ramping)
 - Audio input is a looping WAV file (`sample_audios/guitar_di.wav`); live microphone/line-in requires a USB audio interface and virtual cable setup (see CLAUDE.md Phase 2 notes)
 - No error UI if the engine fails to start (e.g. WAV file missing)
 - Preset names must be valid filenames (no `/`, `\`, etc.) — no validation in UI
