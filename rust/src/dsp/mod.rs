@@ -1,3 +1,4 @@
+pub mod smooth;
 pub mod noise_gate;
 pub mod compressor;
 pub mod overdrive;

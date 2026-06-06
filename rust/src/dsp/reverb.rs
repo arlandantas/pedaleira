@@ -1,3 +1,5 @@
+use crate::dsp::smooth::SmoothedParam;
+
 // Schroeder reverberator: 4 parallel comb filters → 2 series all-pass filters
 const COMB_DELAYS: [usize; 4] = [1557, 1617, 1491, 1422];
 const ALLPASS_DELAYS: [usize; 2] = [225, 556];
@@ -54,11 +56,11 @@ pub struct Reverb {
     combs: [CombFilter; 4],
     allpasses: [AllPassFilter; 2],
     room_size: f32,
-    mix: f32,
+    mix: SmoothedParam,
 }
 
 impl Reverb {
-    pub fn new(_sample_rate: f32, room_size: f32, mix: f32) -> Self {
+    pub fn new(sample_rate: f32, room_size: f32, mix: f32) -> Self {
         let room_size = room_size.clamp(0.0, 0.98);
         Self {
             combs: [
@@ -72,7 +74,7 @@ impl Reverb {
                 AllPassFilter::new(ALLPASS_DELAYS[1]),
             ],
             room_size,
-            mix: mix.clamp(0.0, 1.0),
+            mix: SmoothedParam::new(mix.clamp(0.0, 1.0), sample_rate, 5.0),
         }
     }
 
@@ -84,7 +86,7 @@ impl Reverb {
     }
 
     pub fn set_mix(&mut self, mix: f32) {
-        self.mix = mix.clamp(0.0, 1.0);
+        self.mix.set(mix.clamp(0.0, 1.0));
     }
 
     pub fn process(&mut self, buffer: &mut [f32]) {
@@ -99,7 +101,8 @@ impl Reverb {
             // 2 series all-pass filters
             let wet = self.allpasses[0].process(wet);
             let wet = self.allpasses[1].process(wet);
-            *sample = input * (1.0 - self.mix) + wet * self.mix;
+            let mix = self.mix.next();
+            *sample = input * (1.0 - mix) + wet * mix;
         }
     }
 }

@@ -1,9 +1,10 @@
 use core::f32::consts::TAU;
+use crate::dsp::smooth::SmoothedParam;
 
 pub struct Tremolo {
     phase: f32,
     phase_increment: f32,
-    depth: f32,
+    depth: SmoothedParam,
 }
 
 impl Tremolo {
@@ -11,7 +12,7 @@ impl Tremolo {
         Self {
             phase: 0.0,
             phase_increment: TAU * rate_hz / sample_rate,
-            depth: depth.clamp(0.0, 1.0),
+            depth: SmoothedParam::new(depth.clamp(0.0, 1.0), sample_rate, 5.0),
         }
     }
 
@@ -20,13 +21,14 @@ impl Tremolo {
     }
 
     pub fn set_depth(&mut self, depth: f32) {
-        self.depth = depth.clamp(0.0, 1.0);
+        self.depth.set(depth.clamp(0.0, 1.0));
     }
 
     pub fn process(&mut self, buffer: &mut [f32]) {
         for sample in buffer.iter_mut() {
             let lfo = (self.phase.sin() + 1.0) * 0.5; // 0.0–1.0
-            let gain = 1.0 - self.depth * (1.0 - lfo);
+            let depth = self.depth.next();
+            let gain = 1.0 - depth * (1.0 - lfo);
             *sample *= gain;
             self.phase += self.phase_increment;
             if self.phase >= TAU {

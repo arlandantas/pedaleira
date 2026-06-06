@@ -1,4 +1,5 @@
 use core::f32::consts::TAU;
+use crate::dsp::smooth::SmoothedParam;
 
 const MAX_DELAY_SAMPLES: usize = 4096;
 
@@ -9,7 +10,7 @@ pub struct Chorus {
     lfo_increment: f32,
     depth_samples: f32,
     center_delay_samples: f32,
-    mix: f32,
+    mix: SmoothedParam,
 }
 
 impl Chorus {
@@ -22,7 +23,7 @@ impl Chorus {
             lfo_increment: TAU * rate_hz / sample_rate,
             depth_samples: depth_ms * sample_rate / 1000.0,
             center_delay_samples: 7.0 * sample_rate / 1000.0, // 7 ms center
-            mix: mix.clamp(0.0, 1.0),
+            mix: SmoothedParam::new(mix.clamp(0.0, 1.0), sample_rate, 5.0),
         }
     }
 
@@ -30,7 +31,7 @@ impl Chorus {
         self.lfo_increment = TAU * rate_hz / sample_rate;
     }
 
-    pub fn set_mix(&mut self, mix: f32) { self.mix = mix.clamp(0.0, 1.0); }
+    pub fn set_mix(&mut self, mix: f32) { self.mix.set(mix.clamp(0.0, 1.0)); }
 
     pub fn process(&mut self, buffer: &mut [f32]) {
         for sample in buffer.iter_mut() {
@@ -45,7 +46,8 @@ impl Chorus {
             let read_next = (read_pos + MAX_DELAY_SAMPLES - 1) % MAX_DELAY_SAMPLES;
             let delayed = self.buffer[read_pos] * (1.0 - frac) + self.buffer[read_next] * frac;
 
-            *sample = *sample * (1.0 - self.mix) + delayed * self.mix;
+            let mix = self.mix.next();
+            *sample = *sample * (1.0 - mix) + delayed * mix;
 
             self.write_pos = (self.write_pos + 1) % MAX_DELAY_SAMPLES;
             self.lfo_phase += self.lfo_increment;

@@ -42,8 +42,8 @@ fn render_all_for(wav_path: &str, stem: &str) {
     render(wav_path, stem, "1_noise_gate",  |b| NoiseGate::new(0.02).process(b));
     render(wav_path, stem, "2_compressor",  |b| Compressor::new(SR, -18.0, 4.0, 0.01, 0.1).process(b));
     render(wav_path, stem, "3_overdrive",   |b| Overdrive::new(5.0, 0.5).process(b));
-    render(wav_path, stem, "4_distortion",  |b| Distortion::new(12.0, 0.6).process(b));
-    render(wav_path, stem, "5_fuzz",        |b| Fuzz::new(0.8, 0.7).process(b));
+    render(wav_path, stem, "4_distortion",  |b| Distortion::new(12.0, 0.6, 44100.0).process(b));
+    render(wav_path, stem, "5_fuzz",        |b| Fuzz::new(0.8, 0.7, 44100.0).process(b));
     render(wav_path, stem, "6_tremolo",     |b| Tremolo::new(SR, 5.0, 0.8).process(b));
     render(wav_path, stem, "7_chorus",      |b| Chorus::new(SR, 0.5, 1.5, 0.6).process(b));
     render(wav_path, stem, "8_delay",       |b| Delay::new(SR, 300.0, 0.4, 0.4).process(b));

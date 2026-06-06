@@ -3,7 +3,7 @@ use rust_lib_pedaleira::dsp::distortion::Distortion;
 
 #[test]
 fn distortion_saturates_hot_signal() {
-    let mut dist = Distortion::new(20.0, 1.0);
+    let mut dist = Distortion::new(20.0, 1.0, 44100.0);
     let hot = vec![0.5f32; 2048];
     let mut buf = hot.clone();
     dist.process(&mut buf);
@@ -16,7 +16,7 @@ fn distortion_saturates_hot_signal() {
 
 #[test]
 fn distortion_output_is_finite() {
-    let mut dist = Distortion::new(50.0, 1.0);
+    let mut dist = Distortion::new(50.0, 1.0, 44100.0);
     let mut buf: Vec<f32> = (0..1024).map(|i| (i as f32 * 0.01).sin()).collect();
     dist.process(&mut buf);
     assert!(buf.iter().all(|s| s.is_finite()), "no NaN or Inf");
@@ -26,7 +26,7 @@ fn distortion_output_is_finite() {
 fn distortion_wav_roundtrip() {
     dsp_wav::ensure_test_di_wav("test_assets/di_guitar.wav");
     let samples = dsp_wav::load_wav_mono_f32("test_assets/di_guitar.wav");
-    let mut dist = Distortion::new(12.0, 0.6);
+    let mut dist = Distortion::new(12.0, 0.6, 44100.0);
     let mut buf = samples.clone();
     dist.process(&mut buf);
     dsp_wav::save_wav_mono_f32("/tmp/pedaleira_out_4_distortion.wav", &buf, 44100);

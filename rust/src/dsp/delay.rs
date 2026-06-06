@@ -1,3 +1,5 @@
+use crate::dsp::smooth::SmoothedParam;
+
 const MAX_DELAY_SAMPLES: usize = 88200; // 2 seconds at 44100 Hz
 
 pub struct Delay {
@@ -5,7 +7,7 @@ pub struct Delay {
     write_pos: usize,
     delay_samples: usize,
     feedback: f32,
-    mix: f32,
+    mix: SmoothedParam,
 }
 
 impl Delay {
@@ -17,7 +19,7 @@ impl Delay {
             write_pos: 0,
             delay_samples,
             feedback: feedback.clamp(0.0, 0.95),
-            mix: mix.clamp(0.0, 1.0),
+            mix: SmoothedParam::new(mix.clamp(0.0, 1.0), sample_rate, 5.0),
         }
     }
 
@@ -31,7 +33,7 @@ impl Delay {
     }
 
     pub fn set_mix(&mut self, mix: f32) {
-        self.mix = mix.clamp(0.0, 1.0);
+        self.mix.set(mix.clamp(0.0, 1.0));
     }
 
     pub fn process(&mut self, buffer: &mut [f32]) {
@@ -40,7 +42,8 @@ impl Delay {
                 % MAX_DELAY_SAMPLES;
             let echo = self.buffer[read_pos];
             self.buffer[self.write_pos] = *sample + echo * self.feedback;
-            *sample = *sample * (1.0 - self.mix) + echo * self.mix;
+            let mix = self.mix.next();
+            *sample = *sample * (1.0 - mix) + echo * mix;
             self.write_pos = (self.write_pos + 1) % MAX_DELAY_SAMPLES;
         }
     }

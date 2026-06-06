@@ -32,13 +32,13 @@ impl EffectsChain {
             noise_gate:  NoiseGate::new(0.01),
             compressor:  Compressor::new(sample_rate, -18.0, 4.0, 0.01, 0.1),
             overdrive:   Overdrive::new(3.0, 0.5),
-            distortion:  Distortion::new(8.0, 0.5),
-            fuzz:        Fuzz::new(0.7, 0.7),
+            distortion:  Distortion::new(8.0, 0.5, sample_rate),
+            fuzz:        Fuzz::new(0.7, 0.7, sample_rate),
             chorus:      Chorus::new(sample_rate, 0.5, 1.5, 0.5),
             tremolo:     Tremolo::new(sample_rate, 4.0, 0.5),
             delay:       Delay::new(sample_rate, 300.0, 0.4, 0.4),
             reverb:      Reverb::new(sample_rate, 0.5, 0.3),
-            boost:       Boost::new(1.0),
+            boost:       Boost::new(1.0, sample_rate),
             bypass:      [true; 10],
         }
     }
