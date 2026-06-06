@@ -33,10 +33,40 @@ class AndroidEnvironment {
           "cargo-ndk rustc linker: didn't find _CARGOKIT_NDK_LINK_TARGET env var");
     }
 
-    runCommand(clang, [
-      target,
-      ...args,
-    ]);
+    // NDK 28+ compiler_builtins exports __aeabi_* symbols versioned @@LIBC_N.
+    // LLD requires LIBC_N to be declared in a version script or it errors, even
+    // without --no-undefined-version. Rustc's own version script uses an anonymous
+    // node { global: ...; local: *; }, and LLD rejects mixing anonymous + named nodes,
+    // so we cannot simply append LIBC_N to the existing script. Instead: drop rustc's
+    // version script and --no-undefined-version, then supply a minimal named-only
+    // script that declares LIBC_N. Symbol visibility is unaffected for JNI/FFI symbols
+    // because those are annotated #[no_mangle] with default (global) visibility.
+    final filteredArgs = args.where((a) {
+      final u = a.startsWith('-Wl,') ? a.substring(4) : a;
+      return !u.startsWith('--version-script=') &&
+             u != '--no-undefined-version';
+    }).toList();
+
+    final tempDir = Directory.systemTemp.createTempSync('cargokit_vs_');
+    final scriptFile = File(path.join(tempDir.path, 'version.map'));
+    scriptFile.writeAsStringSync('LIBC_N {};\n');
+
+    // x86/x86_64 emulator targets: NDK 28's libc++_static.a bundles non-PIC
+    // libc objects (sse4-memcmp optimizations) that can't link into a shared
+    // library. Allow text relocations for these emulator-only targets.
+    final isX86 = target.contains('x86_64') || target.contains('i686');
+    final textReloc = isX86 ? ['-Wl,-z,notext'] : <String>[];
+
+    try {
+      runCommand(clang, [
+        target,
+        ...filteredArgs,
+        '-Wl,--version-script=${scriptFile.path}',
+        ...textReloc,
+      ]);
+    } finally {
+      tempDir.deleteSync(recursive: true);
+    }
   }
 
   /// Full path to Android SDK.

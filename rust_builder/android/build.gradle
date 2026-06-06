@@ -31,11 +31,9 @@ android {
 
     compileSdkVersion flutter.compileSdkVersion
 
-    // Use the NDK version
-    // declared in /android/app/build.gradle file of the Flutter project.
-    // Replace it with a version number if this plugin requires a specfic NDK version.
-    // (e.g. ndkVersion "23.1.7779620")
-    ndkVersion android.ndkVersion
+    // Pin to NDK 27 for Rust cross-compilation. NDK 28 introduced versioned libc
+    // symbols (LIBC_N) that conflict with Rust's version script, causing lld to fail.
+    ndkVersion "27.1.12297006"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

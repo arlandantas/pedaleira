@@ -114,6 +114,18 @@ bash -l -c 'flutter test'
 
 **Never use the snap `flutter`** — it ships a broken `ld` that silently breaks Cargokit's Rust compilation. The tarball install at `~/flutter/bin` is the only valid one.
 
+## Android NDK Linker Quirks (NDK 28)
+
+Flutter pins NDK 28 (`flutter.ndkVersion`). The `ndkVersion` in `rust_builder/android/build.gradle` is ignored — Cargokit always reads the version from the Flutter app project. Three NDK 28 issues are worked around:
+
+1. **armv7 — `@@LIBC_N` versioned symbols** (`android_environment.dart`): Recent `compiler_builtins` exports ARM memory functions tagged `@@LIBC_N`. LLD requires that version declared in a version script. Rustc's own script uses an anonymous node `{}` which LLD forbids mixing with named nodes. Fix: strip rustc's version script, write a named-only `LIBC_N {};` script instead.
+
+2. **x86_64 — non-PIC `libc.a`** (`rust/build.rs`): The parent sysroot lib dir has `libc.a` but no `libc.so` stub (those live in versioned subdirs like `24/`). With `-lc -Wl,-Bdynamic`, LLD fell back to static `libc.a` which contains non-PIC SSE4 code. Fix: scan for versioned subdirs and add the lowest API level dir to the link search path before the parent dir.
+
+3. **`libc++_static` stub** (`rust/build.rs`): `oboe-sys` emits `-lc++_static` as a dynamic link, but NDK has no `libc++_static.so` — only the `.a`. Fix: create linker script stubs (`INPUT(path/to/libc++_static.a)`) in `OUT_DIR` so the dynamic flag resolves to the archive.
+
+Do not remove or "simplify" these workarounds — each one targets a specific NDK 28 regression.
+
 ## Environment Notes
 
 - **Flutter:** installed from tarball at `~/flutter/bin`, added to PATH in `~/.profile`. Do NOT install via snap.
