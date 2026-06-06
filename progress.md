@@ -70,7 +70,7 @@
 - [ ] Update vendored `rust_builder/cargokit/` from upstream instead of patching in place — the local `plugin.gradle` was hand-patched to fix a Gradle `project.exec` deprecation; upstream cargokit likely has the same fix already, so the right move is to replace the whole snapshot rather than carry a silent local diff
 
 ## Known Limitations / Tech Debt
-- [ ] **Audio click on preset change** — switching presets causes an audible click; likely caused by abrupt parameter changes mid-buffer; needs investigation and a fix (parameter smoothing / ramping)
+- [x] **Audio click on preset change** — fixed by adding `SmoothedParam` (1-pole ~5ms exponential ramp) to all output-level parameters: `Boost.gain`, `Delay.mix`, `Reverb.mix`, `Chorus.mix`, `Tremolo.depth`, `Fuzz.level`, `Distortion.level`
 - Audio input is a looping WAV file (`sample_audios/guitar_di.wav`); live microphone/line-in requires a USB audio interface and virtual cable setup (see CLAUDE.md Phase 2 notes)
 - No error UI if the engine fails to start (e.g. WAV file missing)
 - Preset names must be valid filenames (no `/`, `\`, etc.) — no validation in UI
